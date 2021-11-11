@@ -1,0 +1,68 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/Parameters.bs"
+import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+import "pkg:/source/Snowplow/Internal/Event.bs"
+
+namespace Snowplow.Internal
+    class ScreenView extends Event
+        id as string
+        name as string
+        viewType as string
+        previousId as string
+        previousName as string
+        previousType as string
+        transitionType as string
+
+        sub new(data as object)
+            super(data)
+
+            params = new Snowplow.Internal.Parameters()
+            m.id = data[params.SV_ID]
+            m.name = data[params.SV_NAME]
+            m.viewType = data[params.SV_TYPE]
+            if data[params.SV_PREVIOUS_ID] <> invalid then m.previousId = data[params.SV_PREVIOUS_ID]
+            if data[params.SV_PREVIOUS_NAME] <> invalid then m.previousName = data[params.SV_PREVIOUS_NAME]
+            if data[params.SV_PREVIOUS_TYPE] <> invalid then m.previousType = data[params.SV_PREVIOUS_TYPE]
+            if data[params.SV_TRANSITION_TYPE] <> invalid then m.transitionType = data[params.SV_TRANSITION_TYPE]
+        end sub
+
+        override function preparePayloadToSend() as object
+            payload = super.preparePayloadToSend()
+            params = new Snowplow.Internal.Parameters()
+            constants = new Snowplow.Internal.TrackerConstants()
+            svPayload = {}
+            svPayload[params.SV_ID] = m.id
+            svPayload[params.SV_NAME] = m.name
+            svPayload[params.SV_TYPE] = m.viewType
+            if m.previousId <> invalid then svPayload[params.SV_PREVIOUS_ID] = m.previousId
+            if m.previousName <> invalid then svPayload[params.SV_PREVIOUS_NAME] = m.previousName
+            if m.previousType <> invalid then svPayload[params.SV_PREVIOUS_TYPE] = m.previousType
+            if m.transitionType <> invalid then svPayload[params.SV_TRANSITION_TYPE] = m.transitionType
+
+            payload[params.UNSTRUCTURED] = FormatJson({
+                schema: constants.SCHEMA_UNSTRUCT_EVENT,
+                data: {
+                    schema: constants.SCHEMA_SCREEN_VIEW,
+                    data: svPayload
+                }
+            })
+
+            return payload
+        end function
+
+        override function getEventName() as dynamic
+            constants = new Snowplow.Internal.TrackerConstants()
+            return constants.EVENT_UNSTRUCTURED
+        end function
+    end class
+end namespace

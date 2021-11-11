@@ -1,0 +1,44 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+
+namespace Snowplow.Internal
+    class Configuration
+        trackerNamespace as string
+        collector as string
+        method as string
+        retryCount as integer
+
+        domainUserId as string
+        networkUserId as string
+        appId as string
+
+        sub new(config)
+            constants = new Snowplow.Internal.TrackerConstants()
+
+            m.retryCount = 0
+            m.trackerNamespace = config.namespace ?? constants.DEFAULT_NAMESPACE
+
+            if config.network <> invalid
+                m.collector = config.network.collector
+                m.method = config.network.method ?? constants.DEFAULT_METHOD
+                if config.network.retryCount <> invalid then m.retryCount = config.network.retryCount
+            end if
+
+            if config.subject <> invalid
+                m.domainUserId = config.subject.domainUserId
+                m.networkUserId = config.subject.networkUserId
+                m.appId = config.subject.appId
+            end if
+        end sub
+    end class
+end namespace

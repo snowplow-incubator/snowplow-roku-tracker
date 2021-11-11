@@ -1,0 +1,94 @@
+import "pkg:/source/Snowplow/Internal/Event.bs"
+
+namespace tests
+
+    @suite("Event tests")
+    class EventTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("initialization")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("sets device and true timestamp")
+        function setsDeviceAndTrueTimestamp()
+            tm1 = m.getTimestamp()
+            event = new Snowplow.Internal.Event({ ttm: tm1 })
+            tm2 = m.getTimestamp()
+
+            m.assertNotInvalid(event.deviceTimestamp)
+            m.assertTrue(event.deviceTimestamp >= tm1)
+            m.assertTrue(event.deviceTimestamp <= tm2)
+            m.assertEqual(tm1, event.trueTimestamp)
+        end function
+
+        @it("sets contexts")
+        function setsContexts()
+            event = new Snowplow.Internal.Event({
+                contexts: [
+                    { data: { test: "test1" }, schema: "schema1" },
+                    { data: { test: "test2" }, schema: "schema2" }
+                ]
+            })
+            m.assertEqual(2, event.contexts.count())
+            m.assertEqual("schema1", event.contexts[0].schema)
+            m.assertEqual("schema2", event.contexts[1].schema)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("validate preparePayloadToSend output")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("contains required parameters")
+        function payloadContainsRequiredParameters()
+            event = new Snowplow.Internal.Event({})
+            payload = event.preparePayloadToSend()
+            m.assertNotInvalid(payload.dtm)
+            m.assertNotInvalid(payload.stm)
+            m.assertNotInvalid(payload.eid)
+            m.assertInvalid(payload.co)
+        end function
+
+        @it("contains contexts")
+        function payloadContainsRequiredParameters()
+            event = new Snowplow.Internal.Event({
+                contexts: [
+                    { data: { test: "test1" }, schema: "schema1" }
+                ]
+            })
+            payload = event.preparePayloadToSend()
+            m.assertNotInvalid(payload.co)
+            m.assertNotEmpty(payload.co)
+            context = ParseJson(payload.co)
+            m.assertEqual(context.schema, "iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-1")
+            m.assertEqual(context.data.count(), 1)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("validate prepareDataToSend output")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("contains schema URI")
+        function hasSchema()
+            event = new Snowplow.Internal.Event({})
+            data = event.prepareDataToSend()
+
+            m.assertTrue(data.schema.StartsWith("iglu:com.snowplowanalytics.snowplow"))
+        end function
+
+        @it("contains data array")
+        function hasDataArray()
+            event = new Snowplow.Internal.Event({})
+            data = event.prepareDataToSend()
+
+            m.assertEqual(data.data.Count(), 1)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ' helper functions
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        private function getTimestamp() as string
+            return CreateObject("roDateTime").AsSeconds().ToStr() + "000"
+        end function
+    end class
+end namespace

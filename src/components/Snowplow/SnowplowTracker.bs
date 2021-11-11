@@ -1,0 +1,106 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/Tracker.bs"
+import "pkg:/source/Snowplow/Internal/Configuration.bs"
+import "pkg:/source/Snowplow/Internal/NetworkConnection.bs"
+import "pkg:/source/Snowplow/Internal/ScreenView.bs"
+import "pkg:/source/Snowplow/Internal/SelfDescribing.bs"
+import "pkg:/source/Snowplow/Internal/Structured.bs"
+import "pkg:/source/Snowplow/Internal/Emitter.bs"
+
+import "pkg:/source/roku_modules/log/LogMixin.brs"
+
+' On initialization, a new thread is created that listens to changes of
+' properties in the interface.
+sub init()
+    m.log = new log.Logger("SnowplowTracker")
+    m.port = createObject("roMessagePort")
+
+    m.top.ObserveField("init", m.port)
+    m.top.ObserveField("screenView", m.port)
+    m.top.ObserveField("selfDescribing", m.port)
+    m.top.ObserveField("structured", m.port)
+
+    m.top.functionName = "runLoop"
+    m.top.control = "RUN"
+end sub
+
+' Loop executed in the background thread that receives configuration and events
+' and calls corresponding functions to handle them.
+sub runLoop()
+    while true
+        msg = wait(15 * 1000, m.port)
+        if msg <> invalid
+            mt = type(msg)
+            if mt = "roSGNodeEvent"
+                field = msg.getField()
+                data = msg.getData()
+
+                if field = "init"
+                    initializeTracker(data)
+                else if field = "screenView"
+                    trackScreenView(data)
+                else if field = "selfDescribing"
+                    trackSelfDescribing(data)
+                else if field = "structured"
+                    trackStructured(data)
+                end if
+            else
+                m.log.error(`Error: unrecognized event type '${mt}'`)
+            end if
+        end if
+    end while
+end sub
+
+' Initialized the tracker given its configuration
+' @param {assocarray} data Configuration of the tracker
+sub initializeTracker(data)
+    configuration = new Snowplow.Internal.Configuration(data)
+    if m.tracker = invalid
+        connection = new Snowplow.Internal.NetworkConnection()
+        emitter = new Snowplow.Internal.Emitter(configuration, connection)
+        m.tracker = new Snowplow.Internal.Tracker(configuration, emitter)
+    else
+        m.tracker.updateConfiguration(configuration)
+    end if
+end sub
+
+' Tracks a screen view event
+' @param {assocarray} data Event properties
+sub trackScreenView(data)
+    event = new Snowplow.Internal.ScreenView(data)
+    trackEvent(event)
+end sub
+
+' Tracks a self-describing event
+' @param {assocarray} data Event properties
+sub trackSelfDescribing(data)
+    event = new Snowplow.Internal.SelfDescribing(data)
+    trackEvent(event)
+end sub
+
+' Tracks a structured event
+' @param {assocarray} data Event properties
+sub trackStructured(data)
+    event = new Snowplow.Internal.Structured(data)
+    trackEvent(event)
+end sub
+
+' Tracks an event
+' @param {Event} event Event instance
+sub trackEvent(event as object)
+    if m.tracker <> invalid
+        m.tracker.trackEvent(event)
+    else
+        m.log.error("Tracker not initialized")
+    end if
+end sub

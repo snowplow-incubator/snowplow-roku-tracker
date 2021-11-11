@@ -1,0 +1,225 @@
+import "pkg:/source/Integration/IntegrationTestSuite.bs"
+
+namespace tests
+
+    @suite("Snowplow component tests")
+    class SnowplowTests extends IntegrationTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("Initialization")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @beforeEach
+        sub beforeEachInitialization()
+            m.commonBeforeEach()
+        end sub
+
+        @it("supports multiple trackers with different namespaces")
+        function supportsMultipleTrackers()
+            m.global.snowplow.init = {
+                namespace: "ns1",
+                network: {
+                    collector: m.networkConfig.collector,
+                    method: "POST"
+                }
+            }
+            m.global.snowplow.init = {
+                namespace: "ns2",
+                network: {
+                    collector: m.networkConfig.collector,
+                    method: "GET"
+                }
+            }
+
+            m.global.snowplow.ns1.structured = {
+                se_ca: "category",
+                se_ac: "action",
+                se_la: "label",
+                se_pr: "property",
+                se_va: 100
+            }
+            m.global.snowplow.ns2.structured = {
+                se_ca: "category",
+                se_ac: "action",
+                se_la: "label",
+                se_pr: "property",
+                se_va: 10
+            }
+            m.global.snowplow.ns2.selfDescribing = {
+                data: {
+                    id: CreateObject("roDeviceInfo").GetRandomUUID(),
+                    name: "name",
+                    type: "type"
+                },
+                schema: "iglu:com.snowplowanalytics.mobile/screen_view/jsonschema/1-0-0"
+            }
+            sleep(1000)
+
+            counts = m.getMicroCounts()
+            m.assertEqual(3, counts.good)
+            m.assertEqual(0, counts.bad)
+
+            good = m.getMicroGoodEvents()
+            namespaceCounts = { ns1: 0, ns2: 0 }
+            for each event in good
+                namespaceCounts[event.event.name_tracker] += 1
+            end for
+            m.assertEqual(1, namespaceCounts.ns1)
+            m.assertEqual(2, namespaceCounts.ns2)
+        end function
+
+        @it("tracks using all tracker namespaces")
+        function supportsMultipleTrackers()
+            m.global.snowplow.init = {
+                namespace: "ns1",
+                network: {
+                    collector: m.networkConfig.collector,
+                    method: "POST"
+                }
+            }
+            m.global.snowplow.init = {
+                namespace: "ns2",
+                network: {
+                    collector: m.networkConfig.collector,
+                    method: "GET"
+                }
+            }
+
+            m.global.snowplow.structured = {
+                se_ca: "category",
+                se_ac: "action",
+                se_la: "label",
+                se_pr: "property",
+                se_va: 100
+            }
+            sleep(1000)
+
+            counts = m.getMicroCounts()
+            m.assertEqual(2, counts.good)
+            m.assertEqual(0, counts.bad)
+
+            good = m.getMicroGoodEvents()
+            namespaceCounts = { ns1: 0, ns2: 0 }
+            for each event in good
+                namespaceCounts[event.event.name_tracker] += 1
+            end for
+            m.assertEqual(1, namespaceCounts.ns1)
+            m.assertEqual(1, namespaceCounts.ns2)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("Event tracking to Micro")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @beforeEach
+        sub beforeEachEventTracking()
+            m.commonBeforeEach()
+        end sub
+
+        @it("tracks structured events")
+        function tracksStructuredEvent()
+            m.global.snowplow.init = {
+                network: m.networkConfig
+            }
+            m.global.snowplow.structured = {
+                se_ca: "category",
+                se_ac: "action",
+                se_la: "label",
+                se_pr: "property",
+                se_va: 100
+            }
+            sleep(1000)
+
+            counts = m.getMicroCounts()
+            m.assertEqual(1, counts.good)
+            m.assertEqual(0, counts.bad)
+        end function
+
+        @it("tracks screen view events")
+        function tracksScreenViewEvent()
+            m.global.snowplow.init = {
+                network: m.networkConfig
+            }
+            m.global.snowplow.screenView = {
+                id: CreateObject("roDeviceInfo").GetRandomUUID(),
+                name: "name",
+                type: "type",
+                transitionType: "transitionType",
+                previousName: "previousName",
+                previousType: "previousType"
+            }
+            sleep(1000)
+
+            counts = m.getMicroCounts()
+            m.assertEqual(1, counts.good)
+            m.assertEqual(0, counts.bad)
+        end function
+
+        @it("tracks self-describing events")
+        function tracksSelfDescribingEvent()
+            m.global.snowplow.init = {
+                network: m.networkConfig
+            }
+            m.global.snowplow.selfDescribing = {
+                data: {
+                    id: CreateObject("roDeviceInfo").GetRandomUUID(),
+                    name: "name",
+                    type: "type"
+                },
+                schema: "iglu:com.snowplowanalytics.mobile/screen_view/jsonschema/1-0-0"
+            }
+            sleep(1000)
+
+            counts = m.getMicroCounts()
+            m.assertEqual(1, counts.good)
+            m.assertEqual(0, counts.bad)
+        end function
+
+        @it("tracks event with context")
+        function tracksStructuredEvent()
+            m.global.snowplow.init = {
+                network: m.networkConfig
+            }
+            m.global.snowplow.structured = {
+                se_ca: "category",
+                se_ac: "action",
+                se_la: "label",
+                se_pr: "property",
+                se_va: 100,
+                contexts: [
+                    {
+                        data: {
+                            id: CreateObject("roDeviceInfo").GetRandomUUID(),
+                            name: "contextName",
+                            type: "type"
+                        },
+                        schema: "iglu:com.snowplowanalytics.mobile/screen_view/jsonschema/1-0-0"
+                    }
+                ]
+            }
+            sleep(1000)
+
+            counts = m.getMicroCounts()
+            m.assertEqual(1, counts.good)
+            m.assertEqual(0, counts.bad)
+
+            events = m.getMicroGoodEvents()
+            event = events[0]
+            contexts = event.event.contexts.data
+            m.assertEqual(1, contexts.count())
+            m.assertEqual("contextName", contexts[0].data.name)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ' private helpers
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        private sub commonBeforeEach()
+            m.resetMicro()
+
+            ' initialize Snowplow instance
+            m.global.AddField("snowplow", "node", false)
+            m.global.snowplow = CreateObject("roSGNode", "Snowplow")
+        end sub
+    end class
+end namespace

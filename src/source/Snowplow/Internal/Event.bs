@@ -1,0 +1,105 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/Parameters.bs"
+import "pkg:/source/Snowplow/Internal/EventContext.bs"
+
+namespace Snowplow.Internal
+    class Event
+        trackerNamespace as string
+        domainUserId as string
+        networkUserId as string
+        appId as string
+        eventId as string
+        trackerVersion as string
+        deviceTimestamp as string
+        trueTimestamp as dynamic
+        platform as string
+        timezone as string
+        language as string
+        resolution as string
+        viewport as string
+        contexts as object
+
+        sub new(data as object)
+            m.deviceTimestamp = m.currentTimestamp()
+            deviceInfo = CreateObject("roDeviceInfo")
+            m.eventId = deviceInfo.GetRandomUUID()
+
+            params = new Snowplow.Internal.Parameters()
+            if data[params.TRUE_TIMESTAMP] <> invalid then m.trueTimestamp = data[params.TRUE_TIMESTAMP]
+
+            m.contexts = []
+            if data.contexts <> invalid
+                for each contextData in data.contexts
+                    context = new Snowplow.Internal.EventContext(contextData)
+                    m.contexts.push(context)
+                end for
+            end if
+        end sub
+
+        function preparePayloadToSend() as object
+            payload = {}
+            params = new Snowplow.Internal.Parameters()
+            constants = new Snowplow.Internal.TrackerConstants()
+
+            ' required properties
+            payload[params.EVENT] = m.getEventName()
+            payload[params.EID] = m.eventId
+            payload[params.TRACKER_VERSION] = m.trackerVersion
+            payload[params.PLATFORM] = m.platform
+            payload[params.DEVICE_TIMESTAMP] = m.deviceTimestamp
+            payload[params.SENT_TIMESTAMP] = m.currentTimestamp()
+            payload[params.NAMESPACE_] = m.trackerNamespace
+
+            ' optional properties
+            if m.domainUserId <> invalid then payload[params.DOMAIN_UID] = m.domainUserId
+            if m.networkUserId <> invalid then payload[params.NETWORK_UID] = m.networkUserId
+            if m.appId <> invalid then payload[params.APPID] = m.appId
+            if m.trueTimestamp <> invalid then payload[params.TRUE_TIMESTAMP] = m.trueTimestamp
+            if m.timezone <> invalid then payload[params.TIMEZONE] = m.timezone
+            if m.language <> invalid then payload[params.LANGUAGE] = m.language
+            if m.resolution <> invalid then payload[params.RESOLUTION] = m.resolution
+            if m.viewport <> invalid then payload[params.VIEWPORT] = m.viewport
+
+            ' contexts
+            if m.contexts.count() > 0
+                contextData = []
+                for each context in m.contexts
+                    contextData.push(context.prepareDataToSend())
+                end for
+                payload[params.CONTEXT] = FormatJson({
+                    schema: constants.SCHEMA_CONTEXTS,
+                    data: contextData
+                })
+            end if
+
+            return payload
+        end function
+
+        function getEventName() as dynamic
+            return invalid
+        end function
+
+        function prepareDataToSend() as object
+            params = new Snowplow.Internal.Parameters()
+            constants = new Snowplow.Internal.TrackerConstants()
+            data = {}
+            data[params.DATA] = [m.preparePayloadToSend()]
+            data[params.SCHEMA] = constants.SCHEMA_PAYLOAD_DATA
+            return data
+        end function
+
+        private function currentTimestamp() as string
+            return CreateObject("roDateTime").AsSeconds().ToStr() + "000"
+        end function
+    end class
+end namespace

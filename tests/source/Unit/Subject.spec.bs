@@ -1,0 +1,52 @@
+import "pkg:/source/Snowplow/Internal/Event.bs"
+import "pkg:/source/Snowplow/Internal/Configuration.bs"
+import "pkg:/source/Snowplow/Internal/Subject.bs"
+
+namespace tests
+
+    @suite("Subject tests")
+    class SubjectTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("validate updateEvent output")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("adds identification from configuration")
+        function hasSchema()
+            configuration = new Snowplow.Internal.Configuration({
+                subject: {
+                    domainUserId: "theDomainUserId",
+                    networkUserId: "theNetworkUserId",
+                    appId: "theAppId",
+                }
+            })
+            subject = new Snowplow.Internal.Subject(configuration)
+            event = new Snowplow.Internal.Event({})
+            subject.updateEvent(event)
+
+            m.assertEqual(event.domainUserId, "theDomainUserId")
+            m.assertEqual(event.networkUserId, "theNetworkUserId")
+            m.assertEqual(event.appId, "theAppId")
+        end function
+
+        @it("automatically adds platform and locale information")
+        function hasDataArray()
+            configuration = new Snowplow.Internal.Configuration({})
+            subject = new Snowplow.Internal.Subject(configuration)
+            event = new Snowplow.Internal.Event({})
+            subject.updateEvent(event)
+
+            m.assertEqual(event.platform, "tv")
+            m.assertNotInvalid(event.trackerVersion)
+            m.assertNotEmpty(event.trackerVersion)
+            m.assertNotInvalid(event.timezone)
+            m.assertNotEmpty(event.timezone)
+            m.assertNotInvalid(event.language)
+            m.assertNotEmpty(event.language)
+            m.assertNotInvalid(event.resolution)
+            m.assertNotEmpty(event.resolution)
+            m.assertNotInvalid(event.viewport)
+            m.assertNotEmpty(event.viewport)
+        end function
+    end class
+end namespace

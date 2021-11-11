@@ -1,0 +1,27 @@
+{
+    "rootDir": "src",
+    "files": [
+        "manifest",
+        "source/**/*.*",
+        "images/**/*.*",
+        "components/**/*.*",
+        {
+            "src": "../src-demo-app/manifest",
+            "dest": ""
+        },
+        {
+            "src": "../src-demo-app/**/*.*",
+            "dest": ""
+        },
+        "!**/*.spec.bs"
+    ],
+    "stagingFolderPath": "build",
+    "createPackage": false,
+    "retainStagingFolder": true,
+    "autoImportComponentScript": true,
+    "sourceMap": true,
+    "ignoreErrorCodes": [1107],
+    "plugins": [
+        "@rokucommunity/bslint"
+    ]
+}

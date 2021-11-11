@@ -1,0 +1,54 @@
+{
+  "name": "@snowplow/roku-tracker",
+  "version": "0.1.0",
+  "description": "Roku tracker for Snowplow",
+  "keywords": [
+    "ropm",
+    "snowplow",
+    "analytics",
+    "roku",
+    "tracking",
+    "events",
+    "open source"
+  ],
+  "files": [
+    "dist/**/!(manifest)*",
+    "!roku_modules",
+    "dist/**/!(*.spec.)*"
+  ],
+  "scripts": {
+    "build": "node scripts/run.js",
+    "build-demo-app": "node scripts/run-demo-app.js",
+    "build-tests": "node scripts/run-tests.js",
+    "package": "bsc --create-package",
+    "lint": "bslint",
+    "deploy": "node scripts/run-deploy.js",
+    "demo-app": "npm run build-demo-app && npm run deploy",
+    "test": "npm run build-tests && npm run deploy"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/snowplow-incubator/snowplow-roku-tracker"
+  },
+  "contributors": [
+    "Matus Tomlein"
+  ],
+  "devDependencies": {
+    "@rokucommunity/bslint": "^0.5.0",
+    "brighterscript": "^0.39.4",
+    "roku-debug": "^0.8.6",
+    "roku-deploy": "^3.5.2",
+    "rooibos-roku": "^4.4.2"
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "roku-requests": "0.2.0",
+    "log": "npm:roku-log@^0.5.1"
+  },
+  "ropm": {
+    "rootDir": "src",
+    "packageRootDir": "dist",
+    "prefixMatching": "expanded"
+  }
+}

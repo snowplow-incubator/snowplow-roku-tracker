@@ -1,0 +1,97 @@
+name: deploy
+
+on:
+  push:
+    tags:
+    - '*.*.*'
+
+jobs:
+
+  # check version in package.json and in tracker constants is the same as the tag version
+  version_check:
+    runs-on: ubuntu-latest
+    outputs:
+      v_tracker: ${{ steps.version.outputs.TRACKER_VERSION}}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Node
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14
+
+    - name: Get tag and tracker versions
+      id: version
+      env:
+        IOS_VER_FILEPATH: 'ios/Util/RNTrackerVersion.m'
+        ANDR_VER_FILEPATH: 'android/src/main/java/com/snowplowanalytics/react/util/TrackerVersion.java'
+      run: |
+        echo ::set-output name=TAG_VERSION::${GITHUB_REF#refs/*/}
+        echo "##[set-output name=TRACKER_VERSION;]$(node -p "require('./package.json').version")"
+        echo "##[set-output name=CODE_TRACKER_VERSION;]$(cat src/source/Snowplow/Internal/TrackerConstants.bs | sed -n -e 's/^.*TRACKER_VERSION = "\(.*\)"/\1/p')"
+    - name: Fail if version mismatch
+      run: |
+        if [ "${{ steps.version.outputs.TAG_VERSION }}" != "${{ steps.version.outputs.TRACKER_VERSION }}" ] ; then
+          echo "Tag version (${{ steps.version.outputs.TAG_VERSION }}) doesn't match version in project (${{ steps.version.outputs.TRACKER_VERSION }})"
+          exit 1
+        fi
+        if [ "${{ steps.version.outputs.TAG_VERSION }}" != "${{ steps.version.outputs.CODE_TRACKER_VERSION }}" ] ; then
+          echo "Tag version (${{ steps.version.outputs.TAG_VERSION }}) doesn't match version in project(ios) (${{ steps.version.outputs.CODE_TRACKER_VERSION }})"
+          exit 1
+        fi
+
+  # build the package and publish on NPM
+  publish_npm:
+    needs: version_check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Build dist files
+        run: |
+          npm ci
+          npm i ropm -g
+          ropm install
+          npm run build
+
+      - name: NPM Publish
+        run: |
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # create a release on Github
+  release:
+    needs: ["publish_npm", "version_check"]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build dist files
+      run: |
+        npm ci
+        npm i ropm -g
+        ropm install
+        npm run build
+
+    - name: Release
+      uses: softprops/action-gh-release@v0.1.7
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        name: Version ${{ needs.version_check.outputs.v_tracker }}
+        draft: false
+        prerelease: ${{ contains(needs.version_check.outputs.v_tracker, '-') }}
