@@ -1,0 +1,18 @@
+{
+    "rootDir": "src",
+    "stagingFolderPath": "dist",
+    "autoImportComponentScript": true,
+    "ignoreErrorCodes": [1107],
+    "createPackage": false,
+    "sourceMap": false,
+    "emitDefinitions": false,
+    "files": [
+        "source/**/*.*",
+        "components/**/*.*"
+    ],
+    "plugins": [],
+    "rokuLog": {
+        "strip": false,
+        "insertPkgPath": true
+    }
+}

@@ -1,0 +1,14 @@
+title=Snowplow Tracker Demo
+major_version=0
+minor_version=1
+build_version=2
+
+mm_icon_focus_hd=pkg:/images/multi-channel-poster.png
+requires_audiometadata=1
+splash_screen_fhd=pkg:/images/multi-channel-splash-FHD.jpg
+splash_color=#808080
+splash_min_time=0
+ui_resolutions=fhd
+
+snowplow_collector=http://192.168.100.127:9090
+snowplow_method=POST

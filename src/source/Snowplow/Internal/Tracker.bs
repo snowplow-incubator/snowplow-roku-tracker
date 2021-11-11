@@ -1,0 +1,37 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/Subject.bs"
+
+namespace Snowplow.Internal
+    class Tracker
+        configuration as Object
+        emitter as Object
+        subject as Object
+
+        sub new(configuration as Object, emitter as Object)
+            m.configuration = configuration
+            m.emitter = emitter
+            m.subject = new Snowplow.Internal.Subject(configuration)
+        end sub
+
+        sub trackEvent(event as Object)
+            m.subject.updateEvent(event)
+            m.emitter.add(event)
+        end sub
+
+        sub updateConfiguration(configuration)
+            m.configuration = configuration
+            m.subject.configuration = configuration
+            m.emitter.configuration = configuration
+        end sub
+    end class
+end namespace

@@ -1,0 +1,58 @@
+import "pkg:/source/Helpers/MockNetworkConnection.bs"
+
+import "pkg:/source/Snowplow/Internal/Tracker.bs"
+import "pkg:/source/Snowplow/Internal/Configuration.bs"
+import "pkg:/source/Snowplow/Internal/Emitter.bs"
+import "pkg:/source/Snowplow/Internal/Structured.bs"
+
+namespace tests
+
+    @suite("Tracker tests")
+    class TrackerTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("tracking events")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("calls subject to update event")
+        function updatesConfiguration()
+            connection = new MockNetworkConnection()
+            configuration = new Snowplow.Internal.Configuration({ network: { collector: "c", method: "POST" } })
+            emitter = new Snowplow.Internal.Emitter(configuration, connection)
+            tracker = new Snowplow.Internal.Tracker(configuration, emitter)
+
+            event = new Snowplow.Internal.Structured({
+                se_ca: "theCategory",
+                se_ac: "theAction"
+            })
+            tracker.trackEvent(event)
+
+            m.assertEqual(1, connection.requests.count())
+            request = connection.requests[0]
+            m.assertEqual("tv", request.body.data[0].p)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("updating configuration")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("updates configuration in emitter and subject as well")
+        function updatesConfiguration()
+            connection = new MockNetworkConnection()
+            configuration1 = new Snowplow.Internal.Configuration({ network: { collector: "c1" } })
+            emitter = new Snowplow.Internal.Emitter(configuration1, connection)
+            tracker = new Snowplow.Internal.Tracker(configuration1, emitter)
+
+            m.assertEqual("c1", tracker.configuration.collector)
+
+            configuration2 = new Snowplow.Internal.Configuration({ network: { collector: "c2" } })
+            tracker.updateConfiguration(configuration2)
+
+            m.assertEqual("c2", tracker.configuration.collector)
+            m.assertEqual("c2", tracker.emitter.configuration.collector)
+            m.assertEqual("c2", tracker.subject.configuration.collector)
+        end function
+
+    end class
+
+end namespace

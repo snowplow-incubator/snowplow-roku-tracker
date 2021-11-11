@@ -1,0 +1,8 @@
+{
+    "rules": {},
+    "globals": [],
+    "ignores": [
+        "source/roku_modules/**/*",
+        "components/roku_modules/**/*"
+    ]
+}

@@ -1,0 +1,52 @@
+import "pkg:/source/Snowplow/Internal/Structured.bs"
+
+namespace tests
+
+    @suite("Structured tests")
+    class StructuredTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("initialization")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("sets structured event properties")
+        function setsDeviceAndTrueTimestamp()
+            event = new Snowplow.Internal.Structured({
+                se_ca: "theCategory",
+                se_ac: "theAction",
+                se_la: "theLabel",
+                se_pr: "theProperty",
+                se_va: 1000
+            })
+
+            m.assertEqual("theCategory", event.category)
+            m.assertEqual("theAction", event.action)
+            m.assertEqual("theLabel", event.label)
+            m.assertEqual("theProperty", event.property)
+            m.assertEqual(1000, event.value)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("payload serialization")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("serializes the payload parameters")
+        function serializesPayloadParameters()
+            event = new Snowplow.Internal.Structured({
+                se_ca: "theCategory",
+                se_ac: "theAction",
+                se_la: "theLabel",
+                se_pr: "theProperty",
+                se_va: 1000
+            })
+            payload = event.preparePayloadToSend()
+
+            m.assertEqual("theCategory", payload.se_ca)
+            m.assertEqual("theAction", payload.se_ac)
+            m.assertEqual("theLabel", payload.se_la)
+            m.assertEqual("theProperty", payload.se_pr)
+            m.assertEqual("1000", payload.se_va)
+        end function
+
+    end class
+end namespace

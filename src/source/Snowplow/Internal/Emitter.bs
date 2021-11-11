@@ -1,0 +1,67 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+
+import "pkg:/source/roku_modules/log/LogMixin.brs"
+
+namespace Snowplow.Internal
+    class Emitter
+        configuration as Object
+        networkConnection as Object
+
+        sub new(configuration as Object, networkConnection as Object)
+            m.configuration = configuration
+            m.networkConnection = networkConnection
+            m.log = new log.Logger("Snowplow")
+        end sub
+
+        sub add(event as object)
+            url = m.createUrl()
+            if m.configuration.method = "GET"
+                params = event.preparePayloadToSend()
+                success = m.networkConnection.getRequest(url, params, m.getRetryCount())
+            else
+                data = event.prepareDataToSend()
+                success = m.networkConnection.postRequest(url, data, m.getRetryCount())
+            end if
+
+            if not success
+                m.log.error("Failed to send event to Snowplow collector")
+            end if
+        end sub
+
+        private function getRetryCount() as integer
+            return m.configuration.retryCount
+        end function
+
+        private function createUrl() as string
+            constants = new Snowplow.Internal.TrackerConstants()
+
+            ' collector
+            url = m.configuration.collector
+            url = url.Trim()
+
+            ' protocol
+            if url.Left(4) <> "http" then url = "https://" + url
+
+            ' path
+            if url.Right(1) <> "/" then url += "/"
+            if m.configuration.method = "GET"
+                url += "i"
+            else
+                url += constants.PROTOCOL_VENDOR + "/" + constants.PROTOCOL_VERSION
+            end if
+
+            return url
+        end function
+    end class
+end namespace

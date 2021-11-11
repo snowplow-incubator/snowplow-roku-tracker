@@ -1,0 +1,41 @@
+{
+    "rootDir": "src",
+    "stagingFolderPath": "build",
+    "retainStagingFolder": true,
+    "autoImportComponentScript": true,
+    "ignoreErrorCodes": [1107],
+    "sourceMap": true,
+    "files": [
+        "source/**/*.*",
+        "components/**/*.*",
+        {
+            "src": "../tests/manifest",
+            "dest": ""
+        },
+        {
+            "src": "../tests/**/*.*",
+            "dest": ""
+        }
+    ],
+    "plugins": [
+        "rooibos-roku"
+    ],
+    "rooibos": {
+        "tags": [
+            "!integration",
+            "!deprecated",
+            "!fixme"
+        ],
+        "lineWidth": 70
+    },
+    "rokuLog": {
+        "strip": false,
+        "insertPkgPath": true
+    },
+    "maestro": {
+        "excludeFilters": [
+            "**/roku_modules/**/*",
+            "**/rooibos-roku/**/*"
+        ]
+    }
+}
