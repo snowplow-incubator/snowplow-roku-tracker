@@ -28,7 +28,7 @@ ropm install snowplow@npm:@snowplow/roku-tracker
 
 ### Manual Installation
 
-1. Download the latest release build from Github.
+1. Download the `dist.zip` or `dist.tar.gz` package from the latest release build on Github.
 2. Copy the following folders and files to your Roku project:
     - Contents of `dist/source` into your `source` directory
     - Contents of `dist/components` into your `components` directory

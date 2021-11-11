@@ -86,6 +86,11 @@ jobs:
         ropm install
         npm run build
 
+    - name: Package dist folder
+      run: |
+        zip -r dist.zip dist
+        tar -czvf dist.tar.gz dist
+
     - name: Release
       uses: softprops/action-gh-release@v0.1.7
       env:
@@ -95,3 +100,6 @@ jobs:
         name: Version ${{ needs.version_check.outputs.v_tracker }}
         draft: false
         prerelease: ${{ contains(needs.version_check.outputs.v_tracker, '-') }}
+        files: |
+          dist.zip
+          dist.tar.gz
