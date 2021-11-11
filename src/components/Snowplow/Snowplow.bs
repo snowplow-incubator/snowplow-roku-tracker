@@ -1,0 +1,78 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+
+import "pkg:/source/roku_modules/log/LogMixin.brs"
+
+' Adds listeners to the published properties
+sub init()
+    m.log = new log.Logger("Snowplow")
+    m.port = createObject("roMessagePort")
+
+    m.top.ObserveField("init", "initializeTracker")
+    m.top.ObserveField("screenView", "trackScreenView")
+    m.top.ObserveField("selfDescribing", "trackSelfDescribing")
+    m.top.ObserveField("structured", "trackStructured")
+
+    m.trackerNamespaces = []
+end sub
+
+sub initializeTracker()
+    data = m.top.init
+    trackerNamespace = getNamespaceFromData(data)
+    createTracker(trackerNamespace, data)
+    m.trackerNamespaces.push(trackerNamespace)
+end sub
+
+' Tracks a screen view event using all initialized trackers
+' @param {assocarray} data Event properties
+sub trackScreenView()
+    data = m.top.screenView
+    if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
+    for each trackerNamespace in m.trackerNamespaces
+        m.log.debug(`Screen view in namespace: ${trackerNamespace}`)
+        m.top[trackerNamespace].screenView = data
+    end for
+end sub
+
+' Tracks a self-describing event using all initialized trackers
+' @param {assocarray} data Event properties
+sub trackSelfDescribing()
+    data = m.top.selfDescribing
+    if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
+    for each trackerNamespace in m.trackerNamespaces
+        m.log.debug(`Self-describing event in namespace: ${trackerNamespace}`)
+        m.top[trackerNamespace].selfDescribing = data
+    end for
+end sub
+
+' Tracks a structured event using all initialized trackers
+' @param {assocarray} data Event properties
+sub trackStructured(data)
+    data = m.top.structured
+    if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
+    for each trackerNamespace in m.trackerNamespaces
+        m.log.debug(`Structured event in namespace: ${trackerNamespace}`)
+        m.top[trackerNamespace].structured = data
+    end for
+end sub
+
+sub createTracker(trackerNamespace, data)
+    m.top.AddField(trackerNamespace, "node", false)
+    m.top[trackerNamespace] = CreateObject("roSGNode", "SnowplowTracker")
+    m.top[trackerNamespace].init = data
+end sub
+
+function getNamespaceFromData(data) as string
+    constants = new Snowplow.Internal.TrackerConstants()
+    return data.namespace ?? constants.DEFAULT_NAMESPACE
+end function

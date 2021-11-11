@@ -1,0 +1,42 @@
+import "pkg:/source/roku_modules/rokurequests/Requests.brs"
+
+namespace tests
+    class IntegrationTestSuite extends Rooibos.BaseTestSuite
+
+        protected override function setup()
+            m.networkConfig = m.getNetworkConfiguration()
+        end function
+
+        protected function getMicroCounts() as object
+            res = rokurequests_Requests().get(m.networkConfig.collector + "/micro/all")
+            return res.json
+        end function
+
+        protected function getMicroGoodEvents() as object
+            res = rokurequests_Requests().get(m.networkConfig.collector + "/micro/good")
+            return res.json
+        end function
+
+        protected sub resetMicro()
+            rokurequests_Requests().get(m.networkConfig.collector + "/micro/reset")
+        end sub
+
+        protected function getNetworkConfiguration() as object
+            result = {}
+
+            raw = ReadASCIIFile("pkg:/manifest")
+            lines = raw.Tokenize(Chr(10))
+            for each line in lines
+                bits = line.Tokenize("=")
+                if bits.Count() > 1
+                    result.AddReplace(bits[0], bits[1])
+                end if
+            next
+            config = {
+                collector: result.snowplow_collector,
+                method: result.snowplow_method
+            }
+            return config
+        end function
+    end class
+end namespace

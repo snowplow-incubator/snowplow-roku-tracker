@@ -1,0 +1,61 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+
+  # run bslint linter
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@master
+        with:
+          node-version: 14
+      - run: npm ci
+      - run: npm i ropm -g
+      - run: ropm install
+      - run: npm run lint
+
+  # build the package files (without demo or tests)
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@master
+        with:
+          node-version: 14
+      - run: npm ci
+      - run: npm i ropm -g
+      - run: ropm install
+      - run: npm run build
+
+  # build the package with demo app
+  build-demo-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@master
+        with:
+          node-version: 14
+      - run: npm ci
+      - run: npm i ropm -g
+      - run: ropm install
+      - run: npm run build-demo-app
+
+  # build the package with tests
+  build-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@master
+        with:
+          node-version: 14
+      - run: npm ci
+      - run: npm i ropm -g
+      - run: ropm install
+      - run: npm run build-tests

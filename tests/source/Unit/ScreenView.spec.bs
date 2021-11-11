@@ -1,0 +1,49 @@
+import "pkg:/source/Snowplow/Internal/ScreenView.bs"
+
+namespace tests
+
+    @suite("ScreenView tests")
+    class ScreenViewTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("initialization")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("sets screen view properties")
+        function setsDeviceAndTrueTimestamp()
+            event = new Snowplow.Internal.ScreenView({
+                id: "theId",
+                name: "theName",
+                type: "theViewType",
+                transitionType: "theTransitionType"
+            })
+
+            m.assertEqual("theId", event.id)
+            m.assertEqual("theName", event.name)
+            m.assertEqual("theViewType", event.viewType)
+            m.assertEqual("theTransitionType", event.transitionType)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("payload serialization")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("serializes the payload parameters")
+        function serializesPayloadParameters()
+            event = new Snowplow.Internal.ScreenView({
+                id: "theId",
+                name: "theName",
+                type: "theViewType"
+            })
+            payload = event.preparePayloadToSend()
+
+            m.assertNotInvalid(payload.ue_pr)
+            m.assertNotEmpty(payload.ue_pr)
+            unstructured = ParseJson(payload.ue_pr)
+            m.assertNotEmpty(unstructured.schema)
+            m.assertNotEmpty(unstructured.data.schema)
+            m.assertEqual("theName", unstructured.data.data.name)
+        end function
+
+    end class
+end namespace

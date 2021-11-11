@@ -1,0 +1,44 @@
+import "pkg:/source/Snowplow/Internal/SelfDescribing.bs"
+
+namespace tests
+
+    @suite("SelfDescribing tests")
+    class SelfDescribingTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("initialization")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("sets self-describing properties")
+        function setsEventProperties()
+            event = new Snowplow.Internal.SelfDescribing({
+                schema: "theSchema",
+                data: { name: "theName" }
+            })
+
+            m.assertEqual("theSchema", event.schema)
+            m.assertEqual("theName", event.data.name)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("payload serialization")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("serializes the payload parameters")
+        function serializesPayloadParameters()
+            event = new Snowplow.Internal.SelfDescribing({
+                schema: "theSchema",
+                data: { name: "theName" }
+            })
+            payload = event.preparePayloadToSend()
+
+            m.assertNotInvalid(payload.ue_pr)
+            m.assertNotEmpty(payload.ue_pr)
+            unstructured = ParseJson(payload.ue_pr)
+            m.assertNotEmpty(unstructured.schema)
+            m.assertEqual("theSchema", unstructured.data.schema)
+            m.assertEqual("theName", unstructured.data.data.name)
+        end function
+
+    end class
+end namespace

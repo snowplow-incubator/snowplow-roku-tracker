@@ -1,0 +1,142 @@
+' ********** Copyright 2016 Roku Corp.  All Rights Reserved. **********
+'
+' Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+'
+' The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+'
+' THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+import "pkg:/source/roku_modules/log/LogMixin.brs"
+
+sub init()
+    m.top._rLog = log.initializeLogManager(["log_PrintTransport"], 5)
+
+    ' Initialize Snowplow
+    m.global.AddField("snowplow", "node", false)
+    m.global.snowplow = CreateObject("roSGNode", "Snowplow")
+    m.global.snowplow.init = {
+        namespace: "ns",
+        network: getSnowplowNetworkConfiguration()
+    }
+
+    m.count = 0
+    m.Video = m.top.findNode("Video")
+    m.RowList = m.top.findNode("RowList")
+    m.BottomBar = m.top.findNode("BottomBar")
+    m.ShowBar = m.top.findNode("ShowBar")
+    m.HideBar = m.top.findNode("HideBar")
+    m.Hint = m.top.findNode("Hint")
+    m.Timer = m.top.findNode("Timer")
+
+    m.Hint.font.size = "20"
+    showHint()
+
+    m.array = loadConfig()
+    if m.array.count() = 1
+        m.BottomBar.visible = false
+        m.Video.setFocus(true)
+    end if
+
+    m.LoadTask = createObject("roSGNode", "RowListContentTask")
+    m.LoadTask.observeField("content", "rowListContentChanged")
+    m.LoadTask.control = "RUN"
+
+    m.RowList.setFocus(true)
+    m.RowList.rowLabelFont.size = "24"
+
+    m.Timer.observeField("fire", "hideHint")
+
+    m.RowList.observeField("rowItemSelected", "ChannelChange")
+
+    m.global.snowplow.ns.screenView = {
+        id: CreateObject("roDeviceInfo").GetRandomUUID(),
+        name: "HomeScene",
+        type: "scene",
+        transitionType: "init"
+    }
+end sub
+
+sub hideHint()
+    m.Hint.visible = false
+end sub
+
+sub showHint()
+    m.Hint.visible = true
+    m.Timer.control = "start"
+end sub
+
+sub optionsMenu()
+    if m.global.Options = 0
+        m.ShowBar.control = "start"
+        m.RowList.setFocus(true)
+        hideHint()
+    else
+        m.HideBar.control = "start"
+        m.Video.setFocus(true)
+        showHint()
+    end if
+end sub
+
+function onKeyEvent(key as string, press as boolean) as boolean
+    handled = false
+    if press
+        if key = "up" or key = "down"
+            if m.global.Options = 0
+                m.global.Options = 1
+                optionsMenu()
+            else
+                m.global.Options = 0
+                optionsMenu()
+            end if
+            handled = true
+        end if
+
+        m.global.snowplow.structured = {
+            se_ca: "key",
+            se_ac: "press",
+            se_pr: key
+        }
+    end if
+
+    return handled
+end function
+
+sub ChannelChange()
+    m.Video.content = m.RowList.content.getChild(m.RowList.rowItemFocused[0]).getChild(m.RowList.rowItemFocused[1])
+    m.Video.control = "play"
+
+    m.global.snowplow.structured = {
+        se_ca: "channel",
+        se_ac: "change",
+        se_la: m.Video.content.title,
+        se_pr: m.Video.content.url
+    }
+end sub
+
+sub rowListContentChanged()
+    m.RowList.content = m.LoadTask.content
+    if m.count = 0
+        m.Video.content = m.RowList.content.getChild(0).getChild(0)
+        m.Video.control = "play"
+        m.count = 1
+    end if
+end sub
+
+function getSnowplowNetworkConfiguration() as object
+    result = {}
+
+    raw = ReadASCIIFile("pkg:/manifest")
+    lines = raw.Tokenize(Chr(10))
+    for each line in lines
+        bits = line.Tokenize("=")
+        if bits.Count() > 1
+            result.AddReplace(bits[0], bits[1])
+        end if
+    next
+    config = {
+        collector: result.snowplow_collector,
+        method: result.snowplow_method,
+        retryCount: 3
+    }
+    return config
+end function

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!--
+Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+
+This program is licensed to you under the Apache License Version 2.0,
+and you may not use this file except in compliance with the Apache License Version 2.0.
+You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the Apache License Version 2.0 is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+-->
+
+<!--
+The Snowplow component provides the single public interface to the Snowplow tracker.
+You may initialize it by creating its object and adding it to the global context from the init of your main scene:
+m.global.AddField("snowplow", "node", false)
+m.global.snowplow = CreateObject("roSGNode", "Snowplow")
+
+After instantiating, initialize a tracker by setting the init property:
+m.global.snowplow.init = {
+    network: {
+        collector: "https://...",
+        method: "POST"
+    },
+}
+
+Track events from anywhere in your application by setting one of the event properties such as:
+m.global.snowplow.structured = {
+    se_ca: "category",
+    se_ac: "action",
+    se_va: 10
+}
+-->
+<component name="Snowplow" extends="Task" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <interface>
+        <!-- initializes a new tracker -->
+        <field id="init" type="assocarray" />
+        <!-- tracks a screen view event using all initialized trackers -->
+        <field id="screenView" type="assocarray" />
+        <!-- tracks a self-describing event using all initialized trackers -->
+        <field id="selfDescribing" type="assocarray" />
+        <!-- tracks a structured event using all initialized trackers -->
+        <field id="structured" type="assocarray" />
+    </interface>
+</component>

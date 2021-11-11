@@ -1,0 +1,55 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/Parameters.bs"
+import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+import "pkg:/source/Snowplow/Internal/Event.bs"
+
+namespace Snowplow.Internal
+    class Structured extends Event
+        category as string
+        action as string
+        label as string
+        property as string
+        value as double
+
+        sub new(data as object)
+            super(data)
+
+            params = new Snowplow.Internal.Parameters()
+            m.category = data[params.SE_CATEGORY]
+            m.action = data[params.SE_ACTION]
+
+            if data[params.SE_LABEL] <> invalid then m.label = data[params.SE_LABEL]
+            if data[params.SE_PROPERTY] <> invalid then m.property = data[params.SE_PROPERTY]
+            if data[params.SE_VALUE] <> invalid then m.value = data[params.SE_VALUE]
+        end sub
+
+        override function preparePayloadToSend() as object
+            payload = super.preparePayloadToSend()
+            params = new Snowplow.Internal.Parameters()
+
+            payload[params.SE_CATEGORY] = m.category
+            payload[params.SE_ACTION] = m.action
+
+            if m.label <> invalid then payload[params.SE_LABEL] = m.label
+            if m.property <> invalid then payload[params.SE_PROPERTY] = m.property
+            if m.value <> invalid then payload[params.SE_VALUE] = m.value.ToStr()
+
+            return payload
+        end function
+
+        override function getEventName() as dynamic
+            constants = new Snowplow.Internal.TrackerConstants()
+            return constants.EVENT_STRUCTURED
+        end function
+    end class
+end namespace

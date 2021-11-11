@@ -1,0 +1,85 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+
+namespace Snowplow.Internal
+    class Subject
+        configuration as object
+
+        sub new(configuration as object)
+            m.configuration = configuration
+        end sub
+
+        sub updateEvent(event as object)
+            if event.domainUserId = invalid then event.domainUserId = m.getDomainUserId()
+            if event.networkUserId = invalid then event.networkUserId = m.getNetworkUserId()
+            if event.appId = invalid then event.appId = m.getAppId()
+
+            event.trackerVersion = m.getTrackerVersion()
+            event.trackerNamespace = m.getTrackerNamespace()
+            event.platform = m.getPlatform()
+            event.timezone = m.getTimezone()
+            event.language = m.getLanguage()
+            event.resolution = m.getResolution()
+            event.viewport = m.getViewport()
+        end sub
+
+        private function getDomainUserId() as dynamic
+            return m.configuration.domainUserId
+        end function
+
+        private function getNetworkUserId() as dynamic
+            return m.configuration.networkUserId
+        end function
+
+        private function getAppId() as dynamic
+            return m.configuration.appId
+        end function
+
+        private function getPlatform() as string
+            return "tv"
+        end function
+
+        private function getTimezone() as string
+            deviceInfo = CreateObject("roDeviceInfo")
+            return deviceInfo.GetTimeZone()
+        end function
+
+        private function getLanguage() as string
+            deviceInfo = CreateObject("roDeviceInfo")
+            return deviceInfo.GetCurrentLocale()
+        end function
+
+        private function getResolution() as string
+            deviceInfo = CreateObject("roDeviceInfo")
+            displaySize = deviceInfo.GetDisplaySize()
+            if displaySize = invalid then return invalid
+            return displaySize.w.ToStr() + "x" + displaySize.h.ToStr()
+        end function
+
+        private function getViewport() as string
+            deviceInfo = CreateObject("roDeviceInfo")
+            resolution = deviceInfo.GetUIResolution()
+            if resolution = invalid then return invalid
+            return resolution.width.ToStr() + "x" + resolution.height.ToStr()
+        end function
+
+        private function getTrackerNamespace() as string
+            return m.configuration.trackerNamespace
+        end function
+
+        private function getTrackerVersion() as string
+            constants = new Snowplow.Internal.TrackerConstants()
+            return constants.TRACKER_VERSION
+        end function
+    end class
+end namespace
