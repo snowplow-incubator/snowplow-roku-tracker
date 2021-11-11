@@ -11,7 +11,7 @@
  
 namespace Snowplow.Internal
     class TrackerConstants
-        TRACKER_VERSION = "0.1.0-alpha.0"
+        TRACKER_VERSION = "0.1.0-alpha.1"
 
         DEFAULT_NAMESPACE = "default"
         DEFAULT_METHOD = "POST"
