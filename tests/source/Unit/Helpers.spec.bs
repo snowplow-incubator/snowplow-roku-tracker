@@ -1,0 +1,34 @@
+import "pkg:/source/Snowplow/Internal/Helpers.bs"
+
+namespace tests
+
+    @suite("Helpers tests")
+    class HelpersTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("currentTimestamp")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @beforeEach
+        sub beforeEachCreateHelpers()
+            m.helpers = new Snowplow.Internal.Helpers()
+        end sub
+
+        @it("returns timestamps larger than current unix seconds")
+        function currentTimestampLargerThanUnixSeconds()
+            tm1 = CreateObject("roDateTime").AsSeconds().ToStr() + "000"
+            tm2 = m.helpers.currentTimestamp()
+
+            m.assertTrue(tm1 < tm2)
+        end function
+
+        @it("returns timestamps that increase over time")
+        function currentTimestampIncreases()
+            tm1 = m.helpers.currentTimestamp()
+            sleep(100)
+            tm2 = m.helpers.currentTimestamp()
+
+            m.assertTrue(tm1 < tm2)
+        end function
+    end class
+end namespace

@@ -11,6 +11,7 @@
  
 import "pkg:/source/Snowplow/Internal/Parameters.bs"
 import "pkg:/source/Snowplow/Internal/EventContext.bs"
+import "pkg:/source/Snowplow/Internal/Helpers.bs"
 
 namespace Snowplow.Internal
     class Event
@@ -30,7 +31,8 @@ namespace Snowplow.Internal
         context as object
 
         sub new(data as object)
-            m.deviceTimestamp = m.currentTimestamp()
+            helpers = new Snowplow.Internal.Helpers()
+            m.deviceTimestamp = helpers.currentTimestamp()
             deviceInfo = CreateObject("roDeviceInfo")
             m.eventId = deviceInfo.GetRandomUUID()
 
@@ -50,6 +52,7 @@ namespace Snowplow.Internal
             payload = {}
             params = new Snowplow.Internal.Parameters()
             constants = new Snowplow.Internal.TrackerConstants()
+            helpers = new Snowplow.Internal.Helpers()
 
             ' required properties
             payload[params.EVENT] = m.getEventName()
@@ -57,7 +60,7 @@ namespace Snowplow.Internal
             payload[params.TRACKER_VERSION] = m.trackerVersion
             payload[params.PLATFORM] = m.platform
             payload[params.DEVICE_TIMESTAMP] = m.deviceTimestamp
-            payload[params.SENT_TIMESTAMP] = m.currentTimestamp()
+            payload[params.SENT_TIMESTAMP] = helpers.currentTimestamp()
             payload[params.NAMESPACE_] = m.trackerNamespace
 
             ' optional properties
@@ -96,10 +99,6 @@ namespace Snowplow.Internal
             data[params.DATA] = [m.preparePayloadToSend()]
             data[params.SCHEMA] = constants.SCHEMA_PAYLOAD_DATA
             return data
-        end function
-
-        private function currentTimestamp() as string
-            return CreateObject("roDateTime").AsSeconds().ToStr() + "000"
         end function
     end class
 end namespace
