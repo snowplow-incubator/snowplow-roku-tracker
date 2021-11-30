@@ -11,6 +11,8 @@
  
 import "pkg:/source/Snowplow/Internal/Subject.bs"
 
+import "pkg:/source/roku_modules/log/LogMixin.brs"
+
 namespace Snowplow.Internal
     class Tracker
         configuration as Object
@@ -21,10 +23,12 @@ namespace Snowplow.Internal
             m.configuration = configuration
             m.emitter = emitter
             m.subject = new Snowplow.Internal.Subject(configuration)
+            m.log = new log.Logger("Snowplow")
         end sub
 
         sub trackEvent(event as Object)
             m.subject.updateEvent(event)
+            event.describe(m.log)
             m.emitter.add(event)
         end sub
 

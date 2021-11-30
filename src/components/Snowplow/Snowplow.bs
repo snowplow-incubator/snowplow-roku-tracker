@@ -50,7 +50,6 @@ sub trackSelfDescribing()
     data = m.top.selfDescribing
     if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
     for each trackerNamespace in m.trackerNamespaces
-        m.log.debug(`Self-describing event in namespace: ${trackerNamespace}`)
         m.top[trackerNamespace].selfDescribing = data
     end for
 end sub
@@ -61,7 +60,6 @@ sub trackStructured(data)
     data = m.top.structured
     if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
     for each trackerNamespace in m.trackerNamespaces
-        m.log.debug(`Structured event in namespace: ${trackerNamespace}`)
         m.top[trackerNamespace].structured = data
     end for
 end sub

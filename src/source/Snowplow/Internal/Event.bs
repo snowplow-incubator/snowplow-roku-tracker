@@ -10,7 +10,7 @@
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  
 import "pkg:/source/Snowplow/Internal/Parameters.bs"
-import "pkg:/source/Snowplow/Internal/EventContext.bs"
+import "pkg:/source/Snowplow/Internal/CustomEventContext.bs"
 import "pkg:/source/Snowplow/Internal/Helpers.bs"
 
 namespace Snowplow.Internal
@@ -42,8 +42,8 @@ namespace Snowplow.Internal
             m.context = []
             if data.context <> invalid
                 for each contextData in data.context
-                    context = new Snowplow.Internal.EventContext(contextData)
-                    m.context.push(context)
+                    context = new Snowplow.Internal.CustomEventContext(contextData)
+                    m.addContext(context)
                 end for
             end if
         end sub
@@ -92,6 +92,10 @@ namespace Snowplow.Internal
             return invalid
         end function
 
+        sub addContext(entity as object)
+            m.context.push(entity)
+        end sub
+
         function prepareDataToSend() as object
             params = new Snowplow.Internal.Parameters()
             constants = new Snowplow.Internal.TrackerConstants()
@@ -100,5 +104,16 @@ namespace Snowplow.Internal
             data[params.SCHEMA] = constants.SCHEMA_PAYLOAD_DATA
             return data
         end function
+
+        sub describe(logger)
+            logger.debug(`+++ Snowplow Event ${m.getEventName()}: ${m.trackerNamespace} namespace, ${m.context.count()} context`)
+            m.describeContext(logger)
+        end sub
+
+        protected sub describeContext(logger)
+            for each context in m.context
+                context.describe(logger)
+            end for
+        end sub
     end class
 end namespace

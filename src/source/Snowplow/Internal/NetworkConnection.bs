@@ -125,11 +125,6 @@ namespace Snowplow.Internal
             urlTransfer.setUrl(url)
             urlTransfer.SetHeaders(headers)
 
-            m.log.debug("[http] ------ START HTTP REQUEST ------")
-            m.log.debug("[http] URL:", urlTransfer.GetURL())
-            m.log.debug("[http] Timeout= ", timeout)
-            m.log.debug("[http] Headers: ", headers)
-
             cancel_and_return = false
 
             responseEvent = invalid
@@ -143,7 +138,6 @@ namespace Snowplow.Internal
                 retryCount = retryCount - 1
                 requestDetails.timesTried = requestDetails.timesTried + 1
 
-                m.log.debug("[http] Method: ", method)
                 sent = false
                 if method = "POST"
                     sent = urlTransfer.AsyncPostFromString(data)
@@ -177,31 +171,27 @@ namespace Snowplow.Internal
                     if type(event) = "roUrlEvent"
                         responseEvent = event
                         responseCode = event.GetResponseCode()
-                        m.log.debug("[http] Response Code", responseCode)
                         if responseCode > 0 and responseCode < 400
                             'Response was good, so we break the while
                             exit while
                         else
                             'We have a bad response
-                            m.log.debug("[http] Bad response", responseCode)
-                            m.log.debug("[http] Will Retry ", retryCount)
+                            m.log.debug(`${responseCode} bad response, (will retry ${retryCount}): ${method} request to ${urlTransfer.GetURL()}`)
                         end if
                     else
                         if m.cancel_and_return = true
-                            m.log.debug("[http] Killing the Task")
+                            m.log.debug(`Killing the task: ${method} request to ${urlTransfer.GetURL()}`)
                             exit while
                         else
                             'We timed out so we should cancel the request
-                            m.log.debug("[http] Event Timed Out")
                             urlTransfer.AsyncCancel()
                             'Exponential backoff timeouts
                             timeout = timeout * 2
-                            m.log.debug("[http] Timeout=", timeout)
+                            m.log.debug(`Event timed out (timeout ${timeout}): ${method} request to ${urlTransfer.GetURL()}`)
                         end if
                     end if
                 end if
             end while
-            m.log.debug("[http] ------ END HTTP REQUEST ------")
 
             return m.response(urlTransfer, responseEvent, requestDetails)
         end function

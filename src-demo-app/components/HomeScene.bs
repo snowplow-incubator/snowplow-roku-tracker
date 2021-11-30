@@ -9,7 +9,7 @@
 import "pkg:/source/roku_modules/log/LogMixin.brs"
 
 sub init()
-    m.top._rLog = log.initializeLogManager(["log_PrintTransport"], 5)
+    m.top._rLog = log.initializeLogManager(["log_PrintTransport", "log_ScreenTransport"], 5)
 
     ' Initialize Snowplow
     m.global.AddField("snowplow", "node", false)
@@ -34,20 +34,19 @@ sub init()
     m.array = loadConfig()
     if m.array.count() = 1
         m.BottomBar.visible = false
-        m.Video.setFocus(true)
     end if
 
     m.LoadTask = createObject("roSGNode", "RowListContentTask")
     m.LoadTask.observeField("content", "rowListContentChanged")
     m.LoadTask.control = "RUN"
 
-    m.RowList.setFocus(true)
     m.RowList.rowLabelFont.size = "24"
 
     m.Timer.observeField("fire", "hideHint")
 
     m.RowList.observeField("rowItemSelected", "ChannelChange")
 
+    m.Video.setFocus(true)
     m.global.snowplow.ns.screenView = {
         id: CreateObject("roDeviceInfo").GetRandomUUID(),
         name: "HomeScene",
