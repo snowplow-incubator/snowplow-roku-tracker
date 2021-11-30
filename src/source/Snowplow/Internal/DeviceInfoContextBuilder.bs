@@ -1,0 +1,109 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/DeviceInfoContext.bs"
+
+namespace Snowplow.Internal
+    class DeviceInfoContextBuilder
+
+        function getContext(configuration as object) as dynamic
+            if not configuration.deviceContext then return invalid
+
+            context = new Snowplow.Internal.DeviceInfoContext()
+            deviceInfo = CreateObject("roDeviceInfo")
+
+            context.model = deviceInfo.GetModel()
+            context.modelDisplayName = deviceInfo.GetModelDisplayName()
+            context.modelType = deviceInfo.GetModelType()
+            context.osVersion = m.GetOSVersion(deviceInfo)
+
+            context.channelClientId = m.getChannelClientId(deviceInfo)
+            if configuration.RIDATracking
+                context.isRIDADisabled = m.isRIDADisabled(deviceInfo)
+                context.RIDA = m.getRIDA(deviceInfo)
+            end if
+
+            context.captionsMode = deviceInfo.GetCaptionsMode()
+            context.audioOutputChannel = deviceInfo.GetAudioOutputChannel()
+
+            context.memoryLevel = m.getMemoryLevel(deviceInfo)
+            context.timeSinceLastKeypress = deviceInfo.TimeSinceLastKeypress()
+
+            context.userCountryCode = m.getUserCountryCode(deviceInfo)
+            context.countryCode = deviceInfo.GetCountryCode()
+
+            context.videoMode = deviceInfo.GetVideoMode()
+
+            displayProperties = deviceInfo.GetDisplayProperties()
+            if displayProperties <> invalid
+                context.displayWidth = displayProperties.Width
+                context.displayHeight = displayProperties.Height
+                context.internalDisplay = displayProperties.Internal
+                context.hdr10 = displayProperties.Hdr10
+                context.hdr10Plus = displayProperties.Hdr10Plus
+                context.dolbyVision = displayProperties.DolbyVision
+            end if
+
+            context.connectionType = deviceInfo.GetConnectionType()
+            context.internetStatus = m.getInternetStatus(deviceInfo)
+
+            context.has51SurroundSound = deviceInfo.HasFeature("5.1_surround_sound")
+            context.canOutput51SurroundSound = deviceInfo.HasFeature("can_output_5.1_surround_sound")
+            context.sdOnlyHardware = deviceInfo.HasFeature("sd_only_hardware")
+            context.usbHardware = deviceInfo.HasFeature("usb_hardware")
+            context.sdCardHardware = deviceInfo.HasFeature("sdcard_hardware")
+            context.ethernetHardware = deviceInfo.HasFeature("ethernet_hardware")
+            context.gamingHardware = deviceInfo.HasFeature("gaming_hardware")
+            context.energyStarCompliant = deviceInfo.HasFeature("energy_star_compliant")
+            context.soundbarHardware = deviceInfo.HasFeature("soundbar_hardware")
+            context.handsfreeVoice = deviceInfo.HasFeature("handsfree_voice")
+
+            return context
+        end function
+
+        private function getOSVersion(deviceInfo) as dynamic
+            if FindMemberFunction(deviceInfo, "GetOsVersion") = invalid then return invalid
+            versionArray = deviceInfo.GetOsVersion()
+            versionString = Substitute("{0}.{1}.{2}.{3}", versionArray.major, versionArray.minor, versionArray.revision, versionArray.build)
+            return versionString
+        end function
+
+        private function getChannelClientId(deviceInfo) as dynamic
+            if FindMemberFunction(deviceInfo, "GetChannelClientId") = invalid then return invalid
+            return deviceInfo.GetChannelClientId()
+        end function
+
+        private function isRIDADisabled(deviceInfo) as dynamic
+            if FindMemberFunction(deviceInfo, "IsRIDADisabled") = invalid then return invalid
+            return deviceInfo.IsRIDADisabled()
+        end function
+
+        private function getRIDA(deviceInfo) as dynamic
+            if FindMemberFunction(deviceInfo, "GetRIDA") = invalid then return invalid
+            return deviceInfo.GetRIDA()
+        end function
+
+        private function getMemoryLevel(deviceInfo) as dynamic
+            if FindMemberFunction(deviceInfo, "GetGeneralMemoryLevel") = invalid then return invalid
+            return deviceInfo.GetGeneralMemoryLevel()
+        end function
+
+        private function getUserCountryCode(deviceInfo) as dynamic
+            if FindMemberFunction(deviceInfo, "GetUserCountryCode") = invalid then return invalid
+            return deviceInfo.GetUserCountryCode()
+        end function
+
+        private function getInternetStatus(deviceInfo) as dynamic
+            if FindMemberFunction(deviceInfo, "GetInternetStatus") = invalid then return invalid
+            return deviceInfo.GetInternetStatus()
+        end function
+    end class
+end namespace

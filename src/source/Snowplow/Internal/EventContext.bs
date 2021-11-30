@@ -8,26 +8,26 @@
 ' software distributed under the Apache License Version 2.0 is distributed on an
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
  
 namespace Snowplow.Internal
-    class EventContext
-        function prepareDataToSend() as object
-            return {
-                schema: m.getSchema(),
-                data: m.getPayloadData()
-            }
-        end function
+    class EventContext extends BaseEventContext
+        data as object
+        schema as string
 
-        sub describe(logger)
-            logger.debug(`Context ${m.getSchema()}`)
+        sub new(data as object)
+            super()
+            m.data = data.data
+            m.schema = data.schema
         end sub
 
-        protected function getPayloadData() as dynamic
-            return invalid
+        protected override function getPayloadData() as dynamic
+            return m.data
         end function
 
-        protected function getSchema() as dynamic
-            return invalid
+        protected override function getSchema() as dynamic
+            return m.schema
         end function
     end class
 end namespace

@@ -176,18 +176,18 @@ namespace Snowplow.Internal
                             exit while
                         else
                             'We have a bad response
-                            m.log.debug(`${responseCode} bad response, (will retry ${retryCount}): ${method} request to ${urlTransfer.GetURL()}`)
+                            m.log.debug(`[http] ${responseCode} bad response, (will retry ${retryCount}): ${method} request to ${urlTransfer.GetURL()}`)
                         end if
                     else
                         if m.cancel_and_return = true
-                            m.log.debug(`Killing the task: ${method} request to ${urlTransfer.GetURL()}`)
+                            m.log.debug(`[http] Killing the task: ${method} request to ${urlTransfer.GetURL()}`)
                             exit while
                         else
                             'We timed out so we should cancel the request
                             urlTransfer.AsyncCancel()
                             'Exponential backoff timeouts
                             timeout = timeout * 2
-                            m.log.debug(`Event timed out (timeout ${timeout}): ${method} request to ${urlTransfer.GetURL()}`)
+                            m.log.debug(`[http] Event timed out (timeout ${timeout}): ${method} request to ${urlTransfer.GetURL()}`)
                         end if
                     end if
                 end if

@@ -1,0 +1,47 @@
+import "pkg:/source/Snowplow/Internal/DeviceInfoContext.bs"
+
+namespace tests
+
+    @suite("Device info context tests")
+    class DeviceInfoContextTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("creates payload body with correct properties")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("contains basic properties")
+        function shouldContainBasicProperties()
+            context = new Snowplow.Internal.DeviceInfoContext()
+            context.model = "3940EU"
+            context.osVersion = "10.5812"
+            context.videoMode = "1080p"
+            data = context.prepareDataToSend()
+            m.assertEqual(data.data.model, "3940EU")
+            m.assertEqual(data.data.osVersion, "10.5812")
+            m.assertEqual(data.data.videoMode, "1080p")
+        end function
+
+        @it("lists enabled features")
+        function shouldListEnabledFeatures()
+            context = new Snowplow.Internal.DeviceInfoContext()
+            context.sdOnlyHardware = true
+            context.handsfreeVoice = true
+            data = context.prepareDataToSend()
+            m.assertEqual(2, data.data.features.count())
+            m.assertArrayContains(data.data.features, "sd_only_hardware")
+            m.assertArrayContains(data.data.features, "handsfree_voice")
+        end function
+
+        @it("lists display properties")
+        function shouldListDisplayProperties()
+            context = new Snowplow.Internal.DeviceInfoContext()
+            context.internalDisplay = true
+            context.dolbyVision = true
+            data = context.prepareDataToSend()
+            m.assertEqual(2, data.data.displayProperties.count())
+            m.assertArrayContains(data.data.displayProperties, "Internal")
+            m.assertArrayContains(data.data.displayProperties, "DolbyVision")
+        end function
+
+    end class
+end namespace

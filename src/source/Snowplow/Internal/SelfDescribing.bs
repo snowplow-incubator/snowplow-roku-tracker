@@ -9,7 +9,6 @@
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  
-import "pkg:/source/Snowplow/Internal/Parameters.bs"
 import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
 import "pkg:/source/Snowplow/Internal/Event.bs"
 
@@ -27,11 +26,9 @@ namespace Snowplow.Internal
 
         override function preparePayloadToSend() as object
             payload = super.preparePayloadToSend()
-            params = new Snowplow.Internal.Parameters()
-            constants = new Snowplow.Internal.TrackerConstants()
 
-            payload[params.UNSTRUCTURED] = FormatJson({
-                schema: constants.SCHEMA_UNSTRUCT_EVENT,
+            payload[m.E_UNSTRUCTURED] = FormatJson({
+                schema: m.E_SCHEMA_UNSTRUCT_EVENT,
                 data: {
                     schema: m.schema,
                     data: m.data
@@ -42,8 +39,7 @@ namespace Snowplow.Internal
         end function
 
         override function getEventName() as dynamic
-            constants = new Snowplow.Internal.TrackerConstants()
-            return constants.EVENT_UNSTRUCTURED
+            return m.E_EVENT_UNSTRUCTURED
         end function
     end class
 end namespace

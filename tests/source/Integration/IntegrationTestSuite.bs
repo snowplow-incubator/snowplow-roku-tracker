@@ -7,18 +7,16 @@ namespace tests
             m.networkConfig = m.getNetworkConfiguration()
         end function
 
-        protected function getMicroCounts() as object
-            res = rokurequests_Requests().get(m.networkConfig.collector + "/micro/all")
-            return res.json
-        end function
+        protected sub assertMicroCounts(validation)
+            m.assertMicroResponse(m.networkConfig.collector + "/micro/all", validation)
+        end sub
 
-        protected function getMicroGoodEvents() as object
-            res = rokurequests_Requests().get(m.networkConfig.collector + "/micro/good")
-            return res.json
-        end function
+        protected sub assertMicroGoodEvents(validation)
+            m.assertMicroResponse(m.networkConfig.collector + "/micro/good", validation)
+        end sub
 
         protected sub resetMicro()
-            rokurequests_Requests().get(m.networkConfig.collector + "/micro/reset")
+            rokurequests_Requests().get(m.networkConfig.collector + "/micro/reset", {"useCache": false})
         end sub
 
         protected function getNetworkConfiguration() as object
@@ -38,5 +36,15 @@ namespace tests
             }
             return config
         end function
+
+        private sub assertMicroResponse(api, validation)
+            for i = 1 to 5
+                sleep(500)
+                res = rokurequests_Requests().get(api, {"useCache": false})
+                success = validation(res.json)
+                if success then return
+            end for
+            m.fail("Validation of response from Micro failed")
+        end sub
     end class
 end namespace

@@ -9,8 +9,6 @@
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  
-import "pkg:/source/Snowplow/Internal/Parameters.bs"
-import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
 import "pkg:/source/Snowplow/Internal/Event.bs"
 
 namespace Snowplow.Internal
@@ -21,35 +19,47 @@ namespace Snowplow.Internal
         property as string
         value as double
 
+        ' parameters
+        private SE_CATEGORY = "se_ca"
+        private SE_ACTION = "se_ac"
+        private SE_LABEL = "se_la"
+        private SE_PROPERTY = "se_pr"
+        private SE_VALUE = "se_va"
+
+        ' constants
+        private SE_EVENT_STRUCTURED = "se"
+
         sub new(data as object)
             super(data)
 
-            params = new Snowplow.Internal.Parameters()
-            m.category = data[params.SE_CATEGORY]
-            m.action = data[params.SE_ACTION]
+            m.category = data[m.SE_CATEGORY]
+            m.action = data[m.SE_ACTION]
 
-            if data[params.SE_LABEL] <> invalid then m.label = data[params.SE_LABEL]
-            if data[params.SE_PROPERTY] <> invalid then m.property = data[params.SE_PROPERTY]
-            if data[params.SE_VALUE] <> invalid then m.value = data[params.SE_VALUE]
+            if data[m.SE_LABEL] <> invalid then m.label = data[m.SE_LABEL]
+            if data[m.SE_PROPERTY] <> invalid then m.property = data[m.SE_PROPERTY]
+            if data[m.SE_VALUE] <> invalid then m.value = data[m.SE_VALUE]
         end sub
 
         override function preparePayloadToSend() as object
             payload = super.preparePayloadToSend()
-            params = new Snowplow.Internal.Parameters()
 
-            payload[params.SE_CATEGORY] = m.category
-            payload[params.SE_ACTION] = m.action
+            payload[m.SE_CATEGORY] = m.category
+            payload[m.SE_ACTION] = m.action
 
-            if m.label <> invalid then payload[params.SE_LABEL] = m.label
-            if m.property <> invalid then payload[params.SE_PROPERTY] = m.property
-            if m.value <> invalid then payload[params.SE_VALUE] = m.value.ToStr()
+            if m.label <> invalid then payload[m.SE_LABEL] = m.label
+            if m.property <> invalid then payload[m.SE_PROPERTY] = m.property
+            if m.value <> invalid then payload[m.SE_VALUE] = m.value.ToStr()
 
             return payload
         end function
 
         override function getEventName() as dynamic
-            constants = new Snowplow.Internal.TrackerConstants()
-            return constants.EVENT_STRUCTURED
+            return m.SE_EVENT_STRUCTURED
         end function
+
+        override sub describe(logger)
+            logger.debug(`+++ Structured Event: cat: ${m.category}, act: ${m.action}, lbl: ${m.label}, pr: ${m.property}, val: ${m.val}`)
+            m.describeContext(logger)
+        end sub
     end class
 end namespace
