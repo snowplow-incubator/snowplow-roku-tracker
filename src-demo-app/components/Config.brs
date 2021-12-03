@@ -19,6 +19,7 @@ function loadConfig() as object
 
         {
             Title: "Big Buck Bunny"
+            ContentType: "movie"
             streamFormat: "mp4"
             Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg"
             Stream: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
@@ -40,6 +41,11 @@ function loadConfig() as object
             streamFormat: "mp4"
             Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg"
             Title: "Tears of Steel"
+        }
+        {
+            Stream: "http://commondatastorage.googleapis.com/wrongUrl/raisesError.mp4"
+            streamFormat: "mp4"
+            Title: "Error"
         }
 
         '##### Make sure all Channel content is above this line #####

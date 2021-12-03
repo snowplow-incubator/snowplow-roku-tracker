@@ -47,6 +47,8 @@ sub init()
     m.RowList.observeField("rowItemSelected", "ChannelChange")
 
     m.Video.setFocus(true)
+    StartVideoTracking()
+
     m.global.snowplow.ns.screenView = {
         id: CreateObject("roDeviceInfo").GetRandomUUID(),
         name: "HomeScene",
@@ -101,15 +103,44 @@ function onKeyEvent(key as string, press as boolean) as boolean
 end function
 
 sub ChannelChange()
-    m.Video.content = m.RowList.content.getChild(m.RowList.rowItemFocused[0]).getChild(m.RowList.rowItemFocused[1])
-    m.Video.control = "play"
+    content = m.RowList.content.getChild(m.RowList.rowItemFocused[0]).getChild(m.RowList.rowItemFocused[1])
+    if content.id = "toggleTracking"
+        ToggleVideoTracking(content)
+    else
+        m.Video.content = content
+        m.Video.control = "play"
 
-    m.global.snowplow.structured = {
-        se_ca: "channel",
-        se_ac: "change",
-        se_la: m.Video.content.title,
-        se_pr: m.Video.content.url
+        m.global.snowplow.structured = {
+            se_ca: "channel",
+            se_ac: "change",
+            se_la: m.Video.content.title,
+            se_pr: m.Video.content.url
+        }
+    end if
+end sub
+
+sub ToggleVideoTracking(content)
+    if m.isVideoTracking
+        EndVideoTracking()
+        content.title = "Start Video Tracking"
+    else
+        StartVideoTracking()
+        content.title = "End Video Tracking"
+    end if
+end sub
+
+sub StartVideoTracking()
+    m.global.snowplow.enableVideoTracking = {
+        video: m.Video
     }
+    m.isVideoTracking = true
+end sub
+
+sub EndVideoTracking()
+    m.global.snowplow.disableVideoTracking = {
+        video: m.video
+    }
+    m.isVideoTracking = false
 end sub
 
 sub rowListContentChanged()

@@ -43,6 +43,12 @@
                         item.SetFields(itemAA)
                         row.appendChild(item)
                     end for
+
+                    item = createObject("RoSGNode","ContentNode")
+                    item.id = "toggleTracking"
+                    item.SetFields({Title: "End Video Tracking"})
+                    row.appendChild(item)
+
                     RowItems.appendChild(row)
                 end for
 
@@ -54,6 +60,7 @@
                 for each element in array
                     item = {}
                     item.Title = element.Title
+                    item.ContentType = element.ContentType
                     item.streamFormat = element.streamFormat
                     item.HDPosterUrl = element.Logo
                     item.Url = element.Stream

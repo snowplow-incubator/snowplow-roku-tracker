@@ -23,5 +23,9 @@ See the Apache License Version 2.0 for the specific language governing permissio
         <field id="selfDescribing" type="assocarray" />
         <!-- tracks a structured event -->
         <field id="structured" type="assocarray" />
+        <!-- start tracking of Video node -->
+        <field id="enableVideoTracking" type="assocarray" />
+        <!-- end tracking of Video node -->
+        <field id="disableVideoTracking" type="assocarray" />
     </interface>
 </component>

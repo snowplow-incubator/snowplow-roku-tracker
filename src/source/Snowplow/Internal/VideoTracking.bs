@@ -1,0 +1,338 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/MediaPlayerEvent.bs"
+import "pkg:/source/Snowplow/Internal/MediaPlayerContext.bs"
+import "pkg:/source/Snowplow/Internal/RokuVideoContext.bs"
+
+namespace Snowplow.Internal
+    class VideoTracking
+        private id as string
+        private video as object
+        private label as dynamic
+        private captureEvents as object
+        private sentBoundaries as object
+
+        ' constants
+        private MEDIA_EVENT_PERCENT_PROGRESS = "percentprogress"
+        private MEDIA_EVENT_POSITION = "position"
+        private MEDIA_EVENT_PLAYING = "playing"
+        private MEDIA_EVENT_PAUSED = "paused"
+        private MEDIA_EVENT_BUFFERING = "buffering"
+        private MEDIA_EVENT_STOPPED = "stopped"
+        private MEDIA_EVENT_FINISHED = "finished"
+        private MEDIA_EVENT_ERROR = "error"
+
+        sub new(data)
+            options = data.options ?? {}
+
+            m.id = CreateObject("roDeviceInfo").GetRandomUUID()
+            m.video = data.video
+            m.label = options.label
+            m.captureEvents = {}
+            m.sentBoundaries = {}
+            m.positionInterval = options.positionInterval ?? 5
+            m.lastPositionPing = 0
+
+            events = options.captureEvents ?? [
+                m.MEDIA_EVENT_PERCENT_PROGRESS,
+                m.MEDIA_EVENT_PLAYING,
+                m.MEDIA_EVENT_PAUSED,
+                m.MEDIA_EVENT_BUFFERING,
+                m.MEDIA_EVENT_STOPPED,
+                m.MEDIA_EVENT_FINISHED,
+                m.MEDIA_EVENT_ERROR
+            ]
+            for each event in events
+                m.captureEvents[event] = true
+            end for
+
+            boundaries = options.boundaries ?? 	[10, 25, 50, 75]
+            for each boundary in boundaries
+                m.sentBoundaries[m.toBoundaryKey(boundary)] = false
+            end for
+        end sub
+
+        sub startObserving(port)
+            fields = m.getObservedFields()
+            for each field in fields
+                m.video.observeField(field, port, m.getInfoFields())
+            end for
+        end sub
+
+        sub stopObserving()
+            fields = m.getObservedFields()
+            for each field in fields
+                m.video.unobserveField(field)
+            end for
+        end sub
+
+        function getEventsForFieldChange(field, data, info) as dynamic
+            if field = "state"
+                return m.getEventsForStateChange(data, info)
+            else if field = "position"
+                return m.getEventsForPositionChange(data, info)
+            else if field = "control"
+                return m.getEventsForControlChange(data, info)
+            else
+                return []
+            end if
+        end function
+
+        private function getEventsForStateChange(state, info) as dynamic
+            if not m.captureEvent(state) then return []
+
+            event = m.createEvent(info)
+            event.eventType = state
+            return [event]
+        end function
+
+        private function getEventsForControlChange(control, info) as dynamic
+            if not m.captureEvent(control) then return []
+
+            event = m.createEvent(info)
+            event.eventType = control
+            return [event]
+        end function
+
+        private function getEventsForPositionChange(position, info) as dynamic
+            events = []
+
+            percentageProgressEvent = m.getPercentageProgressEventForPositionChange(info)
+            if percentageProgressEvent <> invalid then events.push(percentageProgressEvent)
+
+            positionEvent = m.getPositionEventForPositionChange(info)
+            if positionEvent <> invalid then events.push(positionEvent)
+
+            return events
+        end function
+
+        private function getPercentageProgressEventForPositionChange(info) as dynamic
+            if not m.captureEvent(m.MEDIA_EVENT_PERCENT_PROGRESS) then return invalid
+
+            boundary = m.getCurrentPercentBoundary(info)
+            if boundary <> invalid and not m.sentBoundaries[m.toBoundaryKey(boundary)]
+                event = m.createEvent(info)
+                event.eventType = m.MEDIA_EVENT_PERCENT_PROGRESS
+                m.sentBoundaries[m.toBoundaryKey(boundary)] = true
+                return event
+            end if
+
+            return invalid
+        end function
+
+        private function getPositionEventForPositionChange(info) as dynamic
+            if not m.captureEvent(m.MEDIA_EVENT_POSITION) then return invalid
+
+            if m.positionInterval <> invalid and Abs(info.position - m.lastPositionPing) >= m.positionInterval
+                m.lastPositionPing = info.position
+                event = m.createEvent(info)
+                event.eventType = m.MEDIA_EVENT_POSITION
+                return event
+            end if
+
+            return invalid
+        end function
+
+        private function createEvent(info) as object
+            event = new Snowplow.Internal.MediaPlayerEvent({})
+            event.label = m.label
+            m.addContext(event, info)
+            return event
+        end function
+
+        private sub addContext(event as object, info as object)
+            mediaPlayerContext = new Snowplow.Internal.MediaPlayerContext()
+            mediaPlayerContext.currentTime = info.position
+            mediaPlayerContext.duration = info.duration
+            mediaPlayerContext.ended = info.state = "finished"
+            mediaPlayerContext.loop = info.loop
+            mediaPlayerContext.muted = info.mute
+            mediaPlayerContext.paused = info.state = "paused"
+            mediaPlayerContext.percentProgress = m.getPercentProgress(info)
+            if info.content <> invalid then mediaPlayerContext.live = info.content.Live
+            mediaPlayerContext.playbackRate = info.playbackSpeed ?? 1
+            mediaPlayerContext.volume = 100
+            event.addContext(mediaPlayerContext)
+
+            rokuVideoContext = new Snowplow.Internal.RokuVideoContext()
+            rokuVideoContext.videoId = m.id
+            rokuVideoContext.contentId = m.getContentId(info)
+            rokuVideoContext.contentTitle = m.getContentTitle(info)
+            rokuVideoContext.contentUrl = m.getContentUrl(info)
+            rokuVideoContext.contentType = m.getContentType(info)
+            rokuVideoContext.streamFormat = m.getStreamFormat(info)
+            rokuVideoContext.streamUrl = m.getStreamUrl(info)
+            rokuVideoContext.videoFormat = m.getVideoFormat(info)
+            rokuVideoContext.isUnderrun = m.isUnderrun(info)
+            rokuVideoContext.isResumed = m.isResumed(info)
+            rokuVideoContext.measuredBitrate = m.getMeasuredBitrate(info)
+            rokuVideoContext.streamBitrate = m.getStreamBitrate(info)
+            rokuVideoContext.timeToStartStreaming = info.timeToStartStreaming
+            rokuVideoContext.width = info.width
+            rokuVideoContext.height = info.height
+            rokuVideoContext.errorStr = m.getErrorStr(info)
+            event.addContext(rokuVideoContext)
+        end sub
+
+        private function getInfoFields() as object
+            return [
+                "streamInfo",
+                "duration",
+                "content",
+                "position",
+                "timeToStartStreaming",
+                "state",
+                "loop",
+                "mute",
+                "videoFormat",
+                "playbackSpeed",
+                "width",
+                "height",
+                "errorStr"
+            ]
+        end function
+
+        private function getObservedFields() as object
+            return [
+                "position",
+                "state",
+                "control"
+            ]
+        end function
+
+        private function getPercentProgress(info as object) as dynamic
+            if info.position <> invalid and info.duration <> invalid and info.duration > 0
+                percentage = 100 * info.position / info.duration
+                if type(percentage) = "Integer" then return percentage
+                return Int(percentage)
+            else
+                return invalid
+            end if
+        end function
+
+        private function getCurrentPercentBoundary(info as object) as dynamic
+            percentProgress = m.getPercentProgress(info)
+            if percentProgress = invalid then return invalid
+
+            boundary = invalid
+            for each b in m.sentBoundaries
+                boundaryToSend = b.toInt()
+                if percentProgress >= boundaryToSend and boundaryToSend > (boundary ?? -1)
+                    boundary = boundaryToSend
+                end if
+            end for
+
+            return boundary
+        end function
+
+        private function captureEvent(eventName) as boolean
+            return m.captureEvents[eventName] ?? false
+        end function
+
+        private function toBoundaryKey(percentage) as string:
+            return Int(percentage).ToStr()
+        end function
+
+        private function getContentType(info) as dynamic
+            if info.content <> invalid and info.content.contentType <> invalid and info.content.ContentType > 0
+                mappings = {
+                    "1": "movie",
+                    "3": "season",
+                    "2": "series",
+                    "4": "episode",
+                    "5": "audio"
+                }
+                return mappings[info.content.ContentType.ToStr()]
+            else
+                return invalid
+            end if
+        end function
+
+        private function getContentId(info) as dynamic
+            if info.content <> invalid
+                contentId = info.content.id
+                if m.isNonEmptyString(info.content.id)
+                    return contentId
+                else if m.isNonEmptyString(info.content.video_id)
+                    return info.content.video_id
+                end if
+            end if
+            return invalid
+        end function
+
+        private function getContentTitle(info) as dynamic
+            if info.content <> invalid
+                title = info.content.title
+                if m.isNonEmptyString(title) then return title
+            end if
+            return invalid
+        end function
+
+        private function getContentUrl(info) as dynamic
+            if info.content <> invalid
+                url = info.content.url
+                if m.isNonEmptyString(url) then return url
+            end if
+            return invalid
+        end function
+
+        private function getStreamFormat(info) as dynamic
+            if info.content <> invalid
+                format = info.content.StreamFormat
+                if m.isNonEmptyString(format) and format <> "(null)" then return format
+            end if
+            return invalid
+        end function
+
+        private function getStreamUrl(info) as dynamic
+            if info.streamInfo <> invalid and m.isNonEmptyString(info.streamInfo.streamUrl)
+                return info.streamInfo.streamUrl
+            end if
+            return invalid
+        end function
+
+        private function isUnderrun(info) as dynamic
+            if info.streamInfo <> invalid then return info.streamInfo.isUnderrun
+            return invalid
+        end function
+
+        private function isResumed(info) as dynamic
+            if info.streamInfo <> invalid then return info.streamInfo.isResumed
+            return invalid
+        end function
+
+        private function getMeasuredBitrate(info) as dynamic
+            if info.streamInfo <> invalid then return info.streamInfo.measuredBitrate
+            return invalid
+        end function
+
+        private function getStreamBitrate(info) as dynamic
+            if info.streamInfo <> invalid then return info.streamInfo.streamBitrate
+            return invalid
+        end function
+
+        private function getErrorStr(info) as dynamic
+            if m.isNonEmptyString(info.errorStr) then return info.errorStr
+            return invalid
+        end function
+
+        private function getVideoFormat(info) as dynamic
+            if m.isNonEmptyString(info.videoFormat) then return info.videoFormat
+            return invalid
+        end function
+
+        private function isNonEmptyString(s) as boolean
+            return s <> Invalid AND (type(s) = "String" OR type(s) = "roString") AND s <> ""
+        end function
+
+    end class
+end namespace
