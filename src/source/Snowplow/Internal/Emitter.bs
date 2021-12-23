@@ -35,7 +35,7 @@ namespace Snowplow.Internal
             end if
 
             if not success
-                m.log.error("Failed to send event to Snowplow collector")
+                m.log.error("[emitter] Failed to send event to Snowplow collector")
             end if
         end sub
 

@@ -10,13 +10,16 @@
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  
 import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+import "pkg:/source/Snowplow/Internal/DeviceInfoContextBuilder.bs"
 
 namespace Snowplow.Internal
     class Subject
         configuration as object
+        deviceInfoContextBuilder as object
 
         sub new(configuration as object)
             m.configuration = configuration
+            m.deviceInfoContextBuilder = new Snowplow.Internal.DeviceInfoContextBuilder()
         end sub
 
         sub updateEvent(event as object)
@@ -31,6 +34,9 @@ namespace Snowplow.Internal
             event.language = m.getLanguage()
             event.resolution = m.getResolution()
             event.viewport = m.getViewport()
+
+            deviceInfoContext = m.deviceInfoContextBuilder.getContext(m.configuration)
+            if deviceInfoContext <> invalid then event.addContext(deviceInfoContext)
         end sub
 
         private function getDomainUserId() as dynamic

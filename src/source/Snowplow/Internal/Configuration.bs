@@ -14,18 +14,22 @@ import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
 namespace Snowplow.Internal
     class Configuration
         trackerNamespace as string
+
+        ' network
         collector as string
         method as string
-        retryCount as integer
+        retryCount = 0
 
+        ' subject
         domainUserId as string
         networkUserId as string
         appId as string
+        deviceContext = true
+        RIDATracking = true
 
         sub new(config)
             constants = new Snowplow.Internal.TrackerConstants()
 
-            m.retryCount = 0
             m.trackerNamespace = config.namespace ?? constants.DEFAULT_NAMESPACE
 
             if config.network <> invalid
@@ -38,6 +42,8 @@ namespace Snowplow.Internal
                 m.domainUserId = config.subject.domainUserId
                 m.networkUserId = config.subject.networkUserId
                 m.appId = config.subject.appId
+                m.deviceContext = config.subject.deviceContext ?? true
+                m.RIDATracking = config.subject.RIDATracking ?? true
             end if
         end sub
     end class

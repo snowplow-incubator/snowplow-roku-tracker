@@ -1,0 +1,91 @@
+import "pkg:/source/Snowplow/Internal/DeviceInfoContextBuilder.bs"
+import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+import "pkg:/source/Snowplow/Internal/Configuration.bs"
+
+namespace tests
+
+    @suite("Device info context builder tests")
+    class DeviceInfoContextBuilderTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("should build context")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("should create context with all properties")
+        function shouldCreateContextWithAllProperties()
+            configuration = new Snowplow.Internal.Configuration({})
+            builder = new Snowplow.Internal.DeviceInfoContextBuilder()
+            context = builder.getContext(configuration)
+            m.assertNotInvalid(context)
+            m.assertNotInvalid(context.model)
+            m.assertNotInvalid(context.modelDisplayName)
+            m.assertNotInvalid(context.modelType)
+            m.assertNotInvalid(context.osVersion)
+            m.assertNotInvalid(context.channelClientId)
+            m.assertNotInvalid(context.captionsMode)
+            m.assertNotInvalid(context.audioOutputChannel)
+            m.assertNotInvalid(context.memoryLevel)
+            m.assertNotInvalid(context.timeSinceLastKeypress)
+            m.assertNotInvalid(context.userCountryCode)
+            m.assertNotInvalid(context.countryCode)
+            m.assertNotInvalid(context.videoMode)
+            m.assertNotInvalid(context.displayWidth)
+            m.assertNotInvalid(context.displayHeight)
+            m.assertNotInvalid(context.GetDisplayProperties)
+            m.assertNotInvalid(context.hdr10)
+            m.assertNotInvalid(context.hdr10Plus)
+            m.assertNotInvalid(context.dolbyVision)
+            m.assertNotInvalid(context.connectionType)
+            m.assertNotInvalid(context.internetStatus)
+            m.assertNotInvalid(context.has51SurroundSound)
+            m.assertNotInvalid(context.canOutput51SurroundSound)
+            m.assertNotInvalid(context.sdOnlyHardware)
+            m.assertNotInvalid(context.usbHardware)
+            m.assertNotInvalid(context.sdCardHardware)
+            m.assertNotInvalid(context.ethernetHardware)
+            m.assertNotInvalid(context.gamingHardware)
+            m.assertNotInvalid(context.energyStarCompliant)
+            m.assertNotInvalid(context.soundbarHardware)
+            m.assertNotInvalid(context.handsfreeVoice)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("should use RIDA according to configuration")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("should add RIDA by default")
+        function shouldAddRIDA()
+            configuration = new Snowplow.Internal.Configuration({})
+            builder = new Snowplow.Internal.DeviceInfoContextBuilder()
+            context = builder.getContext(configuration)
+            m.assertNotInvalid(context.RIDA)
+            m.assertNotInvalid(context.isRIDADisabled)
+        end function
+
+        @it("should not add RIDA if disabled")
+        function shouldNotAddRIDA()
+            configuration = new Snowplow.Internal.Configuration({
+                subject: { RIDATracking: false }
+            })
+            builder = new Snowplow.Internal.DeviceInfoContextBuilder()
+            context = builder.getContext(configuration)
+            m.assertInvalid(context.RIDA)
+            m.assertInvalid(context.isRIDADisabled)
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("disabling device context in configuration")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("not build context if disabled in configuration")
+        function shouldAddRIDA()
+            configuration = new Snowplow.Internal.Configuration({
+                subject: { deviceContext: false }
+            })
+            builder = new Snowplow.Internal.DeviceInfoContextBuilder()
+            context = builder.getContext(configuration)
+            m.assertInvalid(context)
+        end function
+
+    end class
+end namespace
