@@ -22,6 +22,8 @@ sub init()
     m.top.ObserveField("screenView", "trackScreenView")
     m.top.ObserveField("selfDescribing", "trackSelfDescribing")
     m.top.ObserveField("structured", "trackStructured")
+    m.top.ObserveField("enableVideoTracking", "trackVideoPlayer")
+    m.top.ObserveField("disableVideoTracking", "stopTrackingVideoPlayer")
 
     m.trackerNamespaces = []
 end sub
@@ -50,7 +52,6 @@ sub trackSelfDescribing()
     data = m.top.selfDescribing
     if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
     for each trackerNamespace in m.trackerNamespaces
-        m.log.debug(`Self-describing event in namespace: ${trackerNamespace}`)
         m.top[trackerNamespace].selfDescribing = data
     end for
 end sub
@@ -61,8 +62,29 @@ sub trackStructured(data)
     data = m.top.structured
     if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
     for each trackerNamespace in m.trackerNamespaces
-        m.log.debug(`Structured event in namespace: ${trackerNamespace}`)
         m.top[trackerNamespace].structured = data
+    end for
+end sub
+
+' Initilializes video tracking using all initialized trackers
+' @param {assocarray} data Video player properties
+sub trackVideoPlayer(data)
+    data = m.top.enableVideoTracking
+    if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
+    for each trackerNamespace in m.trackerNamespaces
+        m.log.debug(`Init video player in namespace: ${trackerNamespace}`)
+        m.top[trackerNamespace].enableVideoTracking = data
+    end for
+end sub
+
+' Stop video tracking and unobserve video on all initialized trackers
+' @param {assocarray} data Video properties
+sub stopTrackingVideoPlayer(data)
+    data = m.top.disableVideoTracking
+    if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
+    for each trackerNamespace in m.trackerNamespaces
+        m.log.debug(`Finished video playback in namespace: ${trackerNamespace}`)
+        m.top[trackerNamespace].disableVideoTracking = data
     end for
 end sub
 

@@ -11,20 +11,26 @@
  
 import "pkg:/source/Snowplow/Internal/Subject.bs"
 
+import "pkg:/source/roku_modules/log/LogMixin.brs"
+
 namespace Snowplow.Internal
     class Tracker
         configuration as Object
         emitter as Object
         subject as Object
+        trackedVideos as Object
 
         sub new(configuration as Object, emitter as Object)
             m.configuration = configuration
             m.emitter = emitter
             m.subject = new Snowplow.Internal.Subject(configuration)
+            m.trackedVideos = []
+            m.log = new log.Logger("Snowplow")
         end sub
 
         sub trackEvent(event as Object)
             m.subject.updateEvent(event)
+            event.describe(m.log)
             m.emitter.add(event)
         end sub
 
@@ -33,5 +39,52 @@ namespace Snowplow.Internal
             m.subject.configuration = configuration
             m.emitter.configuration = configuration
         end sub
+
+        sub trackVideoPlayer(data, port)
+            video = data.video
+            videoTracking = new Snowplow.Internal.VideoTracking(data)
+            m.trackedVideos.push({
+                video: video,
+                videoTracking: videoTracking
+            })
+            videoTracking.startObserving(port)
+        end sub
+
+        sub stopTrackingVideoPlayer(data, port)
+            video = data.video
+            videoTracking = m.getVideoTrackingForNode(video)
+            if videoTracking = invalid
+                m.log.error("[tracker] Video tracking not initialized for the video.")
+            else
+                videoTracking.stopObserving()
+
+                trackedVideos = []
+                for each v in m.trackedVideos
+                    if not video.isSameNode(v.video)
+                        trackedVideos.push(v)
+                    end if
+                end for
+                m.trackedVideos = trackedVideos
+            end if
+        end sub
+
+        sub trackVideoEvents(field, node, info, data)
+            videoTracking = m.getVideoTrackingForNode(node)
+            if videoTracking = invalid
+                m.log.error("[tracker] Video tracking not initialized for the video.")
+            else
+                events = videoTracking.getEventsForFieldChange(field, data, info)
+                for each event in events
+                    m.trackEvent(event)
+                end for
+            end if
+        end sub
+
+        private function getVideoTrackingForNode(node) as dynamic
+            for each video in m.trackedVideos
+                if node.isSameNode(video.video) then return video.videoTracking
+            end for
+            return invalid
+        end function
     end class
 end namespace

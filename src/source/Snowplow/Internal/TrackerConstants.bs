@@ -11,7 +11,7 @@
  
 namespace Snowplow.Internal
     class TrackerConstants
-        TRACKER_VERSION = "0.1.0"
+        TRACKER_VERSION = "0.2.0"
 
         DEFAULT_NAMESPACE = "default"
         DEFAULT_METHOD = "POST"
@@ -19,14 +19,6 @@ namespace Snowplow.Internal
         PROTOCOL_VENDOR = "com.snowplowanalytics.snowplow"
         PROTOCOL_VERSION = "tp2"
 
-        SCHEMA_PAYLOAD_DATA = "iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4"
-        SCHEMA_CONTEXTS = "iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-1"
-        SCHEMA_UNSTRUCT_EVENT = "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0"
-        SCHEMA_SCREEN_VIEW = "iglu:com.snowplowanalytics.mobile/screen_view/jsonschema/1-0-0"
-
         POST_CONTENT_TYPE = "application/json; charset=utf-8"
-
-        EVENT_STRUCTURED = "se"
-        EVENT_UNSTRUCTURED = "ue"
     end class
 end namespace

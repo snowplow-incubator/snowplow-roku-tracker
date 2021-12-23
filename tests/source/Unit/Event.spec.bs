@@ -1,4 +1,5 @@
 import "pkg:/source/Snowplow/Internal/Event.bs"
+import "pkg:/source/Snowplow/Internal/Helpers.bs"
 
 namespace tests
 
@@ -88,7 +89,8 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         private function getTimestamp() as string
-            return CreateObject("roDateTime").AsSeconds().ToStr() + "000"
+            helpers = new Snowplow.Internal.Helpers()
+            return helpers.currentTimestamp()
         end function
     end class
 end namespace

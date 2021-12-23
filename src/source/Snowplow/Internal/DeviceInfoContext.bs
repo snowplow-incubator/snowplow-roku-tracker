@@ -1,0 +1,168 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
+ 
+namespace Snowplow.Internal
+    class DeviceInfoContext extends BaseEventContext
+        ' device and os properties
+        model as string ' 5-character string, e.g. 3940EU
+        modelDisplayName as string ' e.g. Roku Express 4K
+        modelType as string ' STB or TV
+        osVersion as string ' e.g. 10.54049
+
+        ' device identification
+        channelClientId as string ' unique device identifier for channel
+        isRIDADisabled as boolean ' ad tracking disabled
+        RIDA as string ' advertising id
+
+        ' playback
+        captionsMode as string ' global captions: On, Off, or Instant replay
+        audioOutputChannel as string ' Stereo or 5.1 surround
+
+        ' device usage
+        memoryLevel as string ' general memory level of the channel: normal, low, or critical
+        timeSinceLastKeypress as integer ' number of seconds since last remote keypress
+
+        ' locale
+        userCountryCode as string ' 2-letter country code associated with Roku account
+        countryCode as string ' 2-letter country code for the Roku channel store
+
+        ' display
+        videoMode as string ' video playback resolution, e.g. 1080p
+        displayWidth as integer ' physical display width in cm
+        displayHeight as integer ' physical display width in cm
+        internalDisplay = false ' is display part of Roku player (such as Roku TV)
+        hdr10 = false ' display supports HDR10
+        hdr10Plus = false ' display supports HDR10+
+        dolbyVision = false ' display supports Dolby Vision
+
+        ' network
+        connectionType as string ' e.g. has wifi or wired connection
+        internetStatus as boolean ' is connected, since Roku 10
+
+        ' device features
+        has51SurroundSound = false
+        canOutput51SurroundSound = false
+        sdOnlyHardware = false
+        usbHardware = false
+        sdCardHardware = false
+        ethernetHardware = false
+        gamingHardware = false
+        energyStarCompliant = false
+        soundbarHardware = false ' device has soundbar hardware
+        handsfreeVoice = false ' paired with a hands-free Roku remote control
+
+        ' parameters
+        private DI_MODEL = "model"
+        private DI_MODEL_DISPLAY_NAME = "modelDisplayName"
+        private DI_MODEL_TYPE = "modelType"
+        private DI_OS_VERSION = "osVersion"
+        private DI_CHANNEL_CLIENT_ID = "channelClientId"
+        private DI_IS_RIDA_DISABLED = "isRIDADisabled"
+        private DI_RIDA = "RIDA"
+        private DI_CAPTIONS_MODE = "captionsMode"
+        private DI_AUDIO_OUTPUT_CHANNEL = "audioOutputChannel"
+        private DI_MEMORY_LEVEL = "memoryLevel"
+        private DI_TIME_SINCE_LAST_KEYPRESS = "timeSinceLastKeypress"
+        private DI_USER_COUNTRY_CODE = "userCountryCode"
+        private DI_COUNTRY_CODE = "countryCode"
+        private DI_VIDEO_MODE = "videoMode"
+        private DI_DISPLAY_WIDTH = "displayWidth"
+        private DI_DISPLAY_HEIGHT = "displayHeight"
+        private DI_DISPLAY_PROPERTIES = "displayProperties"
+        private DI_CONNECTION_TYPE = "connectionType"
+        private DI_INTERNET_STATUS = "internetStatus"
+        private DI_FEATURES = "features"
+
+        ' constants
+        private DI_SCHEMA_DEVICE_CONTEXT = "iglu:com.roku/device_info/jsonschema/1-0-0"
+
+        override sub describe(logger)
+            infos = [
+                `Model: ${m.model}`,
+                `name: ${m.modelDisplayName}`,
+                `type: ${m.modelType}`,
+                `OS: ${m.osVersion}`,
+                `channel ID: ${m.channelClientId}`,
+                `RIDA disabled: ${m.isRIDADisabled}`,
+                `RIDA: ${m.RIDA}`,
+                `captions: ${m.captionsMode}`,
+                `audio: ${m.audioOutputChannel}`,
+                `memory: ${m.memoryLevel}`,
+                `last keypress: ${m.timeSinceLastKeypress}`,
+                `user CC: ${m.userCountryCode}`,
+                `CC: ${m.countryCode}`,
+                `video: ${m.videoMode}`,
+                `display w: ${m.displayWidth}`,
+                `display h: ${m.displayHeight}`,
+                `display props: ${m.getDisplayProperties().join(",")}`,
+                `features: ${m.getFeatures().join(",")}`,
+                `connection: ${m.connectionType}`,
+                `internet: ${m.internetStatus}`,
+            ]
+            logger.debug(infos.join(", "))
+        end sub
+
+        protected override function getPayloadData() as dynamic
+            payload = {}
+            payload[m.DI_MODEL] = m.model
+            payload[m.DI_MODEL_DISPLAY_NAME] = m.modelDisplayName
+            payload[m.DI_MODEL_TYPE] = m.modelType
+            if m.osVersion <> invalid then payload[m.DI_OS_VERSION] = m.osVersion
+            if m.channelClientId <> invalid then payload[m.DI_CHANNEL_CLIENT_ID] = m.channelClientId
+            if m.isRIDADisabled <> invalid then payload[m.DI_IS_RIDA_DISABLED] = m.isRIDADisabled
+            if m.RIDA <> invalid then payload[m.DI_RIDA] = m.RIDA
+            payload[m.DI_CAPTIONS_MODE] = m.captionsMode
+            payload[m.DI_AUDIO_OUTPUT_CHANNEL] = m.audioOutputChannel
+            if m.memoryLevel <> invalid then payload[m.DI_MEMORY_LEVEL] = m.memoryLevel
+            payload[m.DI_TIME_SINCE_LAST_KEYPRESS] = m.timeSinceLastKeypress
+            if m.userCountryCode <> invalid then payload[m.DI_USER_COUNTRY_CODE] = m.userCountryCode
+            payload[m.DI_COUNTRY_CODE] = m.countryCode
+            payload[m.DI_VIDEO_MODE] = m.videoMode
+            payload[m.DI_DISPLAY_WIDTH] = m.displayWidth
+            payload[m.DI_DISPLAY_HEIGHT] = m.displayHeight
+            payload[m.DI_DISPLAY_PROPERTIES] = m.getDisplayProperties()
+            payload[m.DI_CONNECTION_TYPE] = m.connectionType
+            if m.internetStatus <> invalid then payload[m.DI_INTERNET_STATUS] = m.internetStatus
+            payload[m.DI_FEATURES] = m.getFeatures()
+
+            return payload
+        end function
+
+        protected override function getSchema() as dynamic
+            return m.DI_SCHEMA_DEVICE_CONTEXT
+        end function
+
+        private function getDisplayProperties() as dynamic
+            properties = []
+            if m.internalDisplay then properties.push("Internal")
+            if m.hdr10 then properties.push("Hdr10")
+            if m.hdr10Plus then properties.push("Hdr10Plus")
+            if m.dolbyVision then properties.push("DolbyVision")
+            return properties
+        end function
+
+        private function getFeatures() as dynamic
+            features = []
+            if m.has51SurroundSound then features.push("5.1_surround_sound")
+            if m.canOutput51SurroundSound then features.push("can_output_5.1_surround_sound")
+            if m.sdOnlyHardware then features.push("sd_only_hardware")
+            if m.usbHardware then features.push("usb_hardware")
+            if m.sdCardHardware then features.push("sdcard_hardware")
+            if m.ethernetHardware then features.push("ethernet_hardware")
+            if m.gamingHardware then features.push("gaming_hardware")
+            if m.energyStarCompliant then features.push("energy_star_compliant")
+            if m.handsfreeVoice then features.push("handsfree_voice")
+            return features
+        end function
+    end class
+end namespace

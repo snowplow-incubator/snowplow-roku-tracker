@@ -12,8 +12,6 @@
         <Video
             id = "Video"
             translation = "[0,0]"
-            width = "1920"
-            height = "1080"
             enableUI = "true"
             loop = "true"
         />

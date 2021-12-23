@@ -12,53 +12,48 @@
 import "pkg:/source/Snowplow/Internal/Event.bs"
 
 namespace Snowplow.Internal
-    class Structured extends Event
-        category as string
-        action as string
+    class MediaPlayerEvent extends Event
+        eventType as string
         label as string
-        property as string
-        value as double
 
         ' parameters
-        private SE_CATEGORY = "se_ca"
-        private SE_ACTION = "se_ac"
-        private SE_LABEL = "se_la"
-        private SE_PROPERTY = "se_pr"
-        private SE_VALUE = "se_va"
-
+        private MPE_TYPE = "type"
+        private MPE_LABEL = "label"
+        
         ' constants
-        private SE_EVENT_STRUCTURED = "se"
+        private MPE_SCHEMA_MEDIA_PLAYER_EVENT = "iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0"
 
         sub new(data as object)
             super(data)
 
-            m.category = data[m.SE_CATEGORY]
-            m.action = data[m.SE_ACTION]
-
-            if data[m.SE_LABEL] <> invalid then m.label = data[m.SE_LABEL]
-            if data[m.SE_PROPERTY] <> invalid then m.property = data[m.SE_PROPERTY]
-            if data[m.SE_VALUE] <> invalid then m.value = data[m.SE_VALUE]
+            m.eventType = data[m.MPE_TYPE]
+            m.label = data[m.MPE_LABEL]
         end sub
 
         override function preparePayloadToSend() as object
             payload = super.preparePayloadToSend()
 
-            payload[m.SE_CATEGORY] = m.category
-            payload[m.SE_ACTION] = m.action
+            eventPayload = {}
+            eventPayload[m.MPE_TYPE] = m.eventType
+            if m.label <> invalid then eventPayload[m.MPE_LABEL] = m.label
 
-            if m.label <> invalid then payload[m.SE_LABEL] = m.label
-            if m.property <> invalid then payload[m.SE_PROPERTY] = m.property
-            if m.value <> invalid then payload[m.SE_VALUE] = m.value.ToStr()
+            payload[m.E_UNSTRUCTURED] = FormatJson({
+                schema: m.E_SCHEMA_UNSTRUCT_EVENT,
+                data: {
+                    schema: m.MPE_SCHEMA_MEDIA_PLAYER_EVENT,
+                    data: eventPayload
+                }
+            })
 
             return payload
         end function
 
         override function getEventName() as dynamic
-            return m.SE_EVENT_STRUCTURED
+            return m.E_EVENT_UNSTRUCTURED
         end function
 
         override sub describe(logger)
-            logger.debug(`+++ Structured Event: cat: ${m.category}, act: ${m.action}, lbl: ${m.label}, pr: ${m.property}, val: ${m.val}`)
+            logger.debug(`+++ Media Player Event: ${m.eventType}, label: ${m.label}`)
             m.describeContext(logger)
         end sub
     end class

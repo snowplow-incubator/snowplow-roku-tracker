@@ -1,0 +1,151 @@
+import "pkg:/source/Snowplow/Internal/VideoTracking.bs"
+import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+
+namespace tests
+
+    @suite("Video tracking tests")
+    class VideoTrackingTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("video tracking events")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("creates events with context")
+        function createsEventsWithContext()
+            videoTracking = new Snowplow.Internal.VideoTracking({options: {label: "theLabel"}})
+            events = videoTracking.getEventsForFieldChange("state", "playing", m.videoInfo())
+            m.assertEqual(1, events.count())
+            event = events[0]
+            m.assertEqual("playing", event.eventType)
+            m.assertEqual("theLabel", event.label)
+            m.assertEqual(2, event.context.count())
+
+            mediaPlayerContext = invalid
+            rokuContext = invalid
+            constants = new Snowplow.Internal.TrackerConstants()
+            for each context in event.context
+                if context.getSchema().Instr("media_player") >= 0
+                    mediaPlayerContext = context
+                else if context.getSchema().Instr("video") >= 0
+                    rokuContext = context
+                end if
+            end for
+
+            m.assertNotInvalid(mediaPlayerContext)
+            m.assertNotInvalid(rokuContext)
+
+            m.assertEqual(100, mediaPlayerContext.currentTime)
+            m.assertEqual(1000, mediaPlayerContext.duration)
+            m.assertFalse(mediaPlayerContext.ended)
+            m.assertFalse(mediaPlayerContext.live)
+            m.assertFalse(mediaPlayerContext.muted)
+            m.assertFalse(mediaPlayerContext.paused)
+            m.assertEqual(10, mediaPlayerContext.percentProgress)
+            m.assertEqual(1, mediaPlayerContext.playbackRate)
+            m.assertEqual(100, mediaPlayerContext.volume)
+
+            m.assertEqual("Big Buck Bunny", rokuContext.contentTitle)
+            m.assertEqual("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", rokuContext.streamUrl)
+            m.assertTrue(rokuContext.isUnderrun)
+            m.assertFalse(rokuContext.isResumed)
+            m.assertEqual(100, rokuContext.measuredBitrate)
+            m.assertEqual(50, rokuContext.streamBitrate)
+            m.assertEqual(0.5, rokuContext.timeToStartStreaming)
+        end function
+
+        @it("creates events for percentage progress")
+        function createsEventsForPercentageProgress()
+            videoTracking = new Snowplow.Internal.VideoTracking({
+                options: {boundaries: [50]}
+            })
+            events = videoTracking.getEventsForFieldChange("position", 500, m.videoInfo(500))
+            m.assertEqual(1, events.count())
+            event = events[0]
+            m.assertEqual("percentprogress", event.eventType)
+        end function
+
+        @it("does not create repeat events for percentage progress")
+        function doesNotCreateRepeatEventsForPercentageProgress()
+            videoTracking = new Snowplow.Internal.VideoTracking({
+                options: {boundaries: [50]}
+            })
+            events = videoTracking.getEventsForFieldChange("position", 500, m.videoInfo(500))
+            m.assertEqual(1, events.count())
+            events = videoTracking.getEventsForFieldChange("position", 500, m.videoInfo(500))
+            m.assertEqual(0, events.count())
+        end function
+
+        @it("creates position events in specified interval")
+        function positionEventsInSpecifiedInterval()
+            videoTracking = new Snowplow.Internal.VideoTracking({
+                options: {
+                    captureEvents: ["position"],
+                    positionInterval: 5
+                }
+            })
+            events = videoTracking.getEventsForFieldChange("position", 10, m.videoInfo(10))
+            m.assertEqual(1, events.count())
+            events = videoTracking.getEventsForFieldChange("position", 13, m.videoInfo(13))
+            m.assertEqual(0, events.count())
+            events = videoTracking.getEventsForFieldChange("position", 15, m.videoInfo(15))
+            m.assertEqual(1, events.count())
+        end function
+
+        @it("does not create progress events if not enabled in options")
+        function doesNotCreateProgressEventsIfNotEnabledInOptions()
+            videoTracking = new Snowplow.Internal.VideoTracking({
+                options: {boundaries: [50]}
+            })
+            events = videoTracking.getEventsForFieldChange("position", 10, m.videoInfo(10))
+            m.assertEqual(0, events.count())
+        end function
+
+        @it("creates events for state changes")
+        function createsEventsForStateChanges()
+            videoTracking = new Snowplow.Internal.VideoTracking({})
+            events = videoTracking.getEventsForFieldChange("state", "playing", m.videoInfo(10))
+            m.assertEqual(1, events.count())
+            events = videoTracking.getEventsForFieldChange("state", "paused", m.videoInfo(10))
+            m.assertEqual(1, events.count())
+        end function
+
+        @it("does not create events for state changes if not enabled in options")
+        function doesNotCreateEventsForStateChangesIfNotEnabledInOptions()
+            videoTracking = new Snowplow.Internal.VideoTracking({
+                options: {captureEvents: ["playing"]}
+            })
+            events = videoTracking.getEventsForFieldChange("state", "playing", m.videoInfo(10, "playing"))
+            m.assertEqual(1, events.count())
+            events = videoTracking.getEventsForFieldChange("state", "paused", m.videoInfo(10, "paused"))
+            m.assertEqual(0, events.count())
+        end function
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ' Helpers
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        private function videoInfo(position = 100, state = "playing") as object
+            return {
+                streamInfo: {
+                    streamUrl: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                    isUnderrun: true,
+                    isResumed: false,
+                    measuredBitrate: 100,
+                    streamBitrate: 50
+                },
+                duration: 1000,
+                content: {
+                    Live: false
+                    Title: "Big Buck Bunny"
+                },
+                position: position,
+                timeToStartStreaming: 0.5,
+                state: state,
+                loop: false,
+                mute: false,
+                videoFormat: "mp4"
+            }
+        end function
+
+    end class
+end namespace

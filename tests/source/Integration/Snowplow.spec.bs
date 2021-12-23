@@ -53,23 +53,22 @@ namespace tests
                 },
                 schema: "iglu:com.snowplowanalytics.mobile/screen_view/jsonschema/1-0-0"
             }
-            sleep(1000)
 
-            counts = m.getMicroCounts()
-            m.assertEqual(3, counts.good)
-            m.assertEqual(0, counts.bad)
+            m.assertMicroCounts(function(counts)
+                return counts.good = 3 and counts.bad = 0
+            end function)
 
-            good = m.getMicroGoodEvents()
-            namespaceCounts = { ns1: 0, ns2: 0 }
-            for each event in good
-                namespaceCounts[event.event.name_tracker] += 1
-            end for
-            m.assertEqual(1, namespaceCounts.ns1)
-            m.assertEqual(2, namespaceCounts.ns2)
+            m.assertMicroGoodEvents(function(good)
+                namespaceCounts = { ns1: 0, ns2: 0 }
+                for each event in good
+                    namespaceCounts[event.event.name_tracker] += 1
+                end for
+                return namespaceCounts.ns1 = 1 and namespaceCounts.ns2 = 2
+            end function)
         end function
 
         @it("tracks using all tracker namespaces")
-        function supportsMultipleTrackers()
+        function tracksUsingAllTrackerNamespaces()
             m.global.snowplow.init = {
                 namespace: "ns1",
                 network: {
@@ -92,19 +91,18 @@ namespace tests
                 se_pr: "property",
                 se_va: 100
             }
-            sleep(1000)
 
-            counts = m.getMicroCounts()
-            m.assertEqual(2, counts.good)
-            m.assertEqual(0, counts.bad)
+            m.assertMicroCounts(function(counts)
+                return counts.good = 2 and counts.bad = 0
+            end function)
 
-            good = m.getMicroGoodEvents()
-            namespaceCounts = { ns1: 0, ns2: 0 }
-            for each event in good
-                namespaceCounts[event.event.name_tracker] += 1
-            end for
-            m.assertEqual(1, namespaceCounts.ns1)
-            m.assertEqual(1, namespaceCounts.ns2)
+            m.assertMicroGoodEvents(function(good)
+                namespaceCounts = { ns1: 0, ns2: 0 }
+                for each event in good
+                    namespaceCounts[event.event.name_tracker] += 1
+                end for
+                return namespaceCounts.ns1 = 1 and namespaceCounts.ns2 = 1
+            end function)
         end function
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -128,11 +126,10 @@ namespace tests
                 se_pr: "property",
                 se_va: 100
             }
-            sleep(1000)
 
-            counts = m.getMicroCounts()
-            m.assertEqual(1, counts.good)
-            m.assertEqual(0, counts.bad)
+            m.assertMicroCounts(function(counts)
+                return counts.good = 1 and counts.bad = 0
+            end function)
         end function
 
         @it("tracks screen view events")
@@ -148,11 +145,10 @@ namespace tests
                 previousName: "previousName",
                 previousType: "previousType"
             }
-            sleep(1000)
 
-            counts = m.getMicroCounts()
-            m.assertEqual(1, counts.good)
-            m.assertEqual(0, counts.bad)
+            m.assertMicroCounts(function(counts)
+                return counts.good = 1 and counts.bad = 0
+            end function)
         end function
 
         @it("tracks self-describing events")
@@ -168,15 +164,14 @@ namespace tests
                 },
                 schema: "iglu:com.snowplowanalytics.mobile/screen_view/jsonschema/1-0-0"
             }
-            sleep(1000)
 
-            counts = m.getMicroCounts()
-            m.assertEqual(1, counts.good)
-            m.assertEqual(0, counts.bad)
+            m.assertMicroCounts(function(counts)
+                return counts.good = 1 and counts.bad = 0
+            end function)
         end function
 
         @it("tracks event with context")
-        function tracksStructuredEvent()
+        function tracksEventWithContext()
             m.global.snowplow.init = {
                 network: m.networkConfig
             }
@@ -197,17 +192,44 @@ namespace tests
                     }
                 ]
             }
-            sleep(1000)
 
-            counts = m.getMicroCounts()
-            m.assertEqual(1, counts.good)
-            m.assertEqual(0, counts.bad)
+            m.assertMicroCounts(function(counts)
+                return counts.good = 1 and counts.bad = 0
+            end function)
 
-            events = m.getMicroGoodEvents()
+            m.assertMicroGoodEvents(m.containsCustomContext)
+        end function
+
+        private function containsCustomContext(events)
             event = events[0]
-            context = event.event.contexts.data
-            m.assertEqual(1, context.count())
-            m.assertEqual("contextName", context[0].data.name)
+            context = []
+            for each entity in event.event.contexts.data
+                if entity.data.name = "contextName" then context.push(entity)
+            end for
+            return context.count() = 1
+        end function
+
+        @it("adds device info context")
+        function addsDeviceInfoContext()
+            m.global.snowplow.init = {
+                network: m.networkConfig
+            }
+            m.global.snowplow.structured = {
+                se_ca: "category",
+                se_ac: "action",
+                se_la: "label"
+            }
+
+            m.assertMicroGoodEvents(m.containsDeviceInfoContext)
+        end function
+
+        private function containsDeviceInfoContext(events)
+            event = events[0]
+            context = []
+            for each entity in event.event.contexts.data
+                if entity.schema.Instr("device_info") >= 0 then context.push(entity)
+            end for
+            return context.count() = 1 and context[0].data.osVersion <> invalid and context[0].data.RIDA <> invalid
         end function
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

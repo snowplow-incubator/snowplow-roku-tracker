@@ -1,0 +1,65 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
+ 
+namespace Snowplow.Internal
+    class MediaPlayerContext extends BaseEventContext
+        currentTime as double
+        duration as double
+        ended as boolean
+        live as boolean
+        loop as boolean
+        muted as boolean
+        paused as boolean
+        percentProgress as integer
+        playbackRate as double
+        volume as integer
+
+        ' parameters
+        private MPC_CURRENT_TIME = "currentTime"
+        private MPC_DURATION = "duration"
+        private MPC_ENDED = "ended"
+        private MPC_LOOP = "loop"
+        private MPC_LIVE = "isLive"
+        private MPC_MUTED = "muted"
+        private MPC_PAUSED = "paused"
+        private MPC_PERCENT_PROGRESS = "percentProgress"
+        private MPC_PLAYBACK_RATE = "playbackRate"
+        private MPC_VOLUME = "volume"
+        
+        ' constants
+        private MPC_SCHEMA_MEDIA_PLAYER = "iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/1-0-0"
+
+        override sub describe(logger)
+            logger.debug(`Time ${m.currentTime}, duration: ${m.duration}, ended: ${m.ended}, live: ${m.live}, loop: ${m.loop}, muted: ${m.muted}, paused: ${m.paused}, progress: ${m.percentProgress}%, rate: ${m.playbackRate}, volume: ${m.volume}`)
+        end sub
+
+        protected override function getPayloadData() as dynamic
+            payload = {}
+            payload[m.MPC_CURRENT_TIME] = m.currentTime
+            payload[m.MPC_DURATION] = m.duration
+            payload[m.MPC_ENDED] = m.ended
+            payload[m.MPC_LIVE] = m.live
+            payload[m.MPC_LOOP] = m.loop
+            payload[m.MPC_MUTED] = m.muted
+            payload[m.MPC_PAUSED] = m.paused
+            payload[m.MPC_PERCENT_PROGRESS] = m.percentProgress
+            payload[m.MPC_PLAYBACK_RATE] = m.playbackRate
+            payload[m.MPC_VOLUME] = m.volume
+            return payload
+        end function
+
+        protected override function getSchema() as dynamic
+            return m.MPC_SCHEMA_MEDIA_PLAYER
+        end function
+    end class
+end namespace
