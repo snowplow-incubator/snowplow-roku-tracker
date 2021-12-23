@@ -136,6 +136,14 @@ m.global.snowplow.structured = {
 }
 ```
 
+To enable video tracking for a Video node, assign a `roAssociativeArray` with the video node to the `enableVideoTracking` property:
+
+```brs
+m.global.snowplow.enableVideoTracking = {
+    video: m.Video
+}
+```
+
 ## Find Out More
 
 | Technical Docs                    | Setup Guide                 |

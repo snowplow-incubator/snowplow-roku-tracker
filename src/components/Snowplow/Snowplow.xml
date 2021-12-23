@@ -44,5 +44,9 @@ m.global.snowplow.structured = {
         <field id="selfDescribing" type="assocarray" />
         <!-- tracks a structured event using all initialized trackers -->
         <field id="structured" type="assocarray" />
+        <!-- start tracking of Video node using all initialized trackers -->
+        <field id="enableVideoTracking" type="assocarray" />
+        <!-- end tracking of Video node on all initialized trackers -->
+        <field id="disableVideoTracking" type="assocarray" />
     </interface>
 </component>

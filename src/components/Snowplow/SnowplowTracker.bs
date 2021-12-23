@@ -16,6 +16,7 @@ import "pkg:/source/Snowplow/Internal/ScreenView.bs"
 import "pkg:/source/Snowplow/Internal/SelfDescribing.bs"
 import "pkg:/source/Snowplow/Internal/Structured.bs"
 import "pkg:/source/Snowplow/Internal/Emitter.bs"
+import "pkg:/source/Snowplow/Internal/VideoTracking.bs"
 
 import "pkg:/source/roku_modules/log/LogMixin.brs"
 
@@ -29,6 +30,10 @@ sub init()
     m.top.ObserveField("screenView", m.port)
     m.top.ObserveField("selfDescribing", m.port)
     m.top.ObserveField("structured", m.port)
+    m.top.ObserveField("enableVideoTracking", m.port)
+    m.top.ObserveField("disableVideoTracking", m.port)
+
+    m.trackedVideos = []
 
     m.top.functionName = "runLoop"
     m.top.control = "RUN"
@@ -44,6 +49,7 @@ sub runLoop()
             if mt = "roSGNodeEvent"
                 field = msg.getField()
                 data = msg.getData()
+                node = msg.getRoSGNode()
 
                 if field = "init"
                     initializeTracker(data)
@@ -53,6 +59,13 @@ sub runLoop()
                     trackSelfDescribing(data)
                 else if field = "structured"
                     trackStructured(data)
+                else if field = "enableVideoTracking"
+                    trackVideoPlayer(data)
+                else if field = "disableVideoTracking"
+                    stopTrackingVideoPlayer(data)
+                else if node.isSubtype("Video")
+                    info = msg.getInfo()
+                    trackVideoEvents(field, node, info, data)
                 end if
             else
                 m.log.error(`Error: unrecognized event type '${mt}'`)
@@ -100,6 +113,34 @@ end sub
 sub trackEvent(event as object)
     if m.tracker <> invalid
         m.tracker.trackEvent(event)
+    else
+        m.log.error("Tracker not initialized")
+    end if
+end sub
+
+' Enable tracking of a Video node
+' @param {assocarray} data Video properties
+sub trackVideoPlayer(data)
+    if m.tracker <> invalid
+        m.tracker.trackVideoPlayer(data, m.port)
+    else
+        m.log.error("Tracker not initialized")
+    end if
+end sub
+
+' Stop video tracking and unobserve video
+' @param {assocarray} data Video properties
+sub stopTrackingVideoPlayer(data)
+    if m.tracker <> invalid
+        m.tracker.stopTrackingVideoPlayer(data, m.port)
+    else
+        m.log.error("Tracker not initialized")
+    end if
+end sub
+
+sub trackVideoEvents(field, node, info, data)
+    if m.tracker <> invalid
+        m.tracker.trackVideoEvents(field, node, info, data)
     else
         m.log.error("Tracker not initialized")
     end if

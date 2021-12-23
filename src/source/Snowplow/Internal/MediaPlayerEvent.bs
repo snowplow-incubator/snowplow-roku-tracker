@@ -1,0 +1,60 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+ 
+import "pkg:/source/Snowplow/Internal/Event.bs"
+
+namespace Snowplow.Internal
+    class MediaPlayerEvent extends Event
+        eventType as string
+        label as string
+
+        ' parameters
+        private MPE_TYPE = "type"
+        private MPE_LABEL = "label"
+        
+        ' constants
+        private MPE_SCHEMA_MEDIA_PLAYER_EVENT = "iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0"
+
+        sub new(data as object)
+            super(data)
+
+            m.eventType = data[m.MPE_TYPE]
+            m.label = data[m.MPE_LABEL]
+        end sub
+
+        override function preparePayloadToSend() as object
+            payload = super.preparePayloadToSend()
+
+            eventPayload = {}
+            eventPayload[m.MPE_TYPE] = m.eventType
+            if m.label <> invalid then eventPayload[m.MPE_LABEL] = m.label
+
+            payload[m.E_UNSTRUCTURED] = FormatJson({
+                schema: m.E_SCHEMA_UNSTRUCT_EVENT,
+                data: {
+                    schema: m.MPE_SCHEMA_MEDIA_PLAYER_EVENT,
+                    data: eventPayload
+                }
+            })
+
+            return payload
+        end function
+
+        override function getEventName() as dynamic
+            return m.E_EVENT_UNSTRUCTURED
+        end function
+
+        override sub describe(logger)
+            logger.debug(`+++ Media Player Event: ${m.eventType}, label: ${m.label}`)
+            m.describeContext(logger)
+        end sub
+    end class
+end namespace
