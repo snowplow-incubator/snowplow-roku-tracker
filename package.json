@@ -21,7 +21,7 @@
     "build-demo-app": "node scripts/run-demo-app.js",
     "build-tests": "node scripts/run-tests.js",
     "package": "bsc --create-package",
-    "lint": "bslint",
+    "lint": "bslint --project bsconfig-demo-app.json && bslint --project bsconfig-tests.json",
     "deploy": "node scripts/run-deploy.js",
     "demo-app": "npm run build-demo-app && npm run deploy",
     "test": "npm run build-tests && npm run deploy"

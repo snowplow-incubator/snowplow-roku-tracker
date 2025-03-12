@@ -18,7 +18,8 @@
         }
     ],
     "plugins": [
-        "rooibos-roku"
+        "rooibos-roku",
+        "@rokucommunity/bslint"
     ],
     "rooibos": {
         "tags": [
