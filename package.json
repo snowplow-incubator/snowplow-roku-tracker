@@ -37,12 +37,12 @@
   "devDependencies": {
     "@rokucommunity/bslint": "^0.5.0",
     "brighterscript": "^0.39.4",
+    "dotenv": "^10.0.0",
     "roku-debug": "^0.8.6",
     "roku-deploy": "^3.5.2",
     "rooibos-roku": "^4.4.2"
   },
   "dependencies": {
-    "dotenv": "^10.0.0",
     "roku-requests": "0.2.0",
     "log": "npm:roku-log@^0.5.1"
   },
