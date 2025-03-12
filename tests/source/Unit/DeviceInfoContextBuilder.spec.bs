@@ -12,7 +12,7 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("should create context with all properties")
-        function shouldCreateContextWithAllProperties()
+        sub shouldCreateContextWithAllProperties()
             configuration = new Snowplow.Internal.Configuration({})
             builder = new Snowplow.Internal.DeviceInfoContextBuilder()
             context = builder.getContext(configuration)
@@ -47,23 +47,23 @@ namespace tests
             m.assertNotInvalid(context.energyStarCompliant)
             m.assertNotInvalid(context.soundbarHardware)
             m.assertNotInvalid(context.handsfreeVoice)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         @describe("should use RIDA according to configuration")
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("should add RIDA by default")
-        function shouldAddRIDA()
+        sub shouldAddRIDA()
             configuration = new Snowplow.Internal.Configuration({})
             builder = new Snowplow.Internal.DeviceInfoContextBuilder()
             context = builder.getContext(configuration)
             m.assertNotInvalid(context.RIDA)
             m.assertNotInvalid(context.isRIDADisabled)
-        end function
+        end sub
 
         @it("should not add RIDA if disabled")
-        function shouldNotAddRIDA()
+        sub shouldNotAddRIDA()
             configuration = new Snowplow.Internal.Configuration({
                 subject: { RIDATracking: false }
             })
@@ -71,21 +71,21 @@ namespace tests
             context = builder.getContext(configuration)
             m.assertInvalid(context.RIDA)
             m.assertInvalid(context.isRIDADisabled)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         @describe("disabling device context in configuration")
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("not build context if disabled in configuration")
-        function shouldAddRIDA()
+        sub shouldAddRIDA()
             configuration = new Snowplow.Internal.Configuration({
                 subject: { deviceContext: false }
             })
             builder = new Snowplow.Internal.DeviceInfoContextBuilder()
             context = builder.getContext(configuration)
             m.assertInvalid(context)
-        end function
+        end sub
 
     end class
 end namespace

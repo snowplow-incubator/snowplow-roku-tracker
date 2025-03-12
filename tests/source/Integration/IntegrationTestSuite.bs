@@ -3,9 +3,9 @@ import "pkg:/source/roku_modules/rokurequests/Requests.brs"
 namespace tests
     class IntegrationTestSuite extends Rooibos.BaseTestSuite
 
-        protected override function setup()
+        protected override sub setup()
             m.networkConfig = m.getNetworkConfiguration()
-        end function
+        end sub
 
         protected sub assertMicroCounts(validation)
             m.assertMicroResponse(m.networkConfig.collector + "/micro/all", validation)

@@ -11,7 +11,7 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("creates events with context")
-        function createsEventsWithContext()
+        sub createsEventsWithContext()
             videoTracking = new Snowplow.Internal.VideoTracking({options: {label: "theLabel"}})
             events = videoTracking.getEventsForFieldChange("state", "playing", m.videoInfo())
             m.assertEqual(1, events.count())
@@ -22,7 +22,6 @@ namespace tests
 
             mediaPlayerContext = invalid
             rokuContext = invalid
-            constants = new Snowplow.Internal.TrackerConstants()
             for each context in event.context
                 if context.getSchema().Instr("media_player") >= 0
                     mediaPlayerContext = context
@@ -51,10 +50,10 @@ namespace tests
             m.assertEqual(100, rokuContext.measuredBitrate)
             m.assertEqual(50, rokuContext.streamBitrate)
             m.assertEqual(0.5, rokuContext.timeToStartStreaming)
-        end function
+        end sub
 
         @it("creates events for percentage progress")
-        function createsEventsForPercentageProgress()
+        sub createsEventsForPercentageProgress()
             videoTracking = new Snowplow.Internal.VideoTracking({
                 options: {boundaries: [50]}
             })
@@ -62,10 +61,10 @@ namespace tests
             m.assertEqual(1, events.count())
             event = events[0]
             m.assertEqual("percentprogress", event.eventType)
-        end function
+        end sub
 
         @it("does not create repeat events for percentage progress")
-        function doesNotCreateRepeatEventsForPercentageProgress()
+        sub doesNotCreateRepeatEventsForPercentageProgress()
             videoTracking = new Snowplow.Internal.VideoTracking({
                 options: {boundaries: [50]}
             })
@@ -73,10 +72,10 @@ namespace tests
             m.assertEqual(1, events.count())
             events = videoTracking.getEventsForFieldChange("position", 500, m.videoInfo(500))
             m.assertEqual(0, events.count())
-        end function
+        end sub
 
         @it("creates position events in specified interval")
-        function positionEventsInSpecifiedInterval()
+        sub positionEventsInSpecifiedInterval()
             videoTracking = new Snowplow.Internal.VideoTracking({
                 options: {
                     captureEvents: ["position"],
@@ -89,28 +88,28 @@ namespace tests
             m.assertEqual(0, events.count())
             events = videoTracking.getEventsForFieldChange("position", 15, m.videoInfo(15))
             m.assertEqual(1, events.count())
-        end function
+        end sub
 
         @it("does not create progress events if not enabled in options")
-        function doesNotCreateProgressEventsIfNotEnabledInOptions()
+        sub doesNotCreateProgressEventsIfNotEnabledInOptions()
             videoTracking = new Snowplow.Internal.VideoTracking({
                 options: {boundaries: [50]}
             })
             events = videoTracking.getEventsForFieldChange("position", 10, m.videoInfo(10))
             m.assertEqual(0, events.count())
-        end function
+        end sub
 
         @it("creates events for state changes")
-        function createsEventsForStateChanges()
+        sub createsEventsForStateChanges()
             videoTracking = new Snowplow.Internal.VideoTracking({})
             events = videoTracking.getEventsForFieldChange("state", "playing", m.videoInfo(10))
             m.assertEqual(1, events.count())
             events = videoTracking.getEventsForFieldChange("state", "paused", m.videoInfo(10))
             m.assertEqual(1, events.count())
-        end function
+        end sub
 
         @it("does not create events for state changes if not enabled in options")
-        function doesNotCreateEventsForStateChangesIfNotEnabledInOptions()
+        sub doesNotCreateEventsForStateChangesIfNotEnabledInOptions()
             videoTracking = new Snowplow.Internal.VideoTracking({
                 options: {captureEvents: ["playing"]}
             })
@@ -118,7 +117,7 @@ namespace tests
             m.assertEqual(1, events.count())
             events = videoTracking.getEventsForFieldChange("state", "paused", m.videoInfo(10, "paused"))
             m.assertEqual(0, events.count())
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         ' Helpers

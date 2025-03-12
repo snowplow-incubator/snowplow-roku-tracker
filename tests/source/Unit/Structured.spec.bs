@@ -10,7 +10,7 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("sets structured event properties")
-        function setsDeviceAndTrueTimestamp()
+        sub setsDeviceAndTrueTimestamp()
             event = new Snowplow.Internal.Structured({
                 se_ca: "theCategory",
                 se_ac: "theAction",
@@ -24,14 +24,14 @@ namespace tests
             m.assertEqual("theLabel", event.label)
             m.assertEqual("theProperty", event.property)
             m.assertEqual(1000, event.value)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         @describe("payload serialization")
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("serializes the payload parameters")
-        function serializesPayloadParameters()
+        sub serializesPayloadParameters()
             event = new Snowplow.Internal.Structured({
                 se_ca: "theCategory",
                 se_ac: "theAction",
@@ -46,7 +46,7 @@ namespace tests
             m.assertEqual("theLabel", payload.se_la)
             m.assertEqual("theProperty", payload.se_pr)
             m.assertEqual("1000", payload.se_va)
-        end function
+        end sub
 
     end class
 end namespace

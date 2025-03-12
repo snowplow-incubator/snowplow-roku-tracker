@@ -10,7 +10,7 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("sets self-describing properties")
-        function setsEventProperties()
+        sub setsEventProperties()
             event = new Snowplow.Internal.SelfDescribing({
                 schema: "theSchema",
                 data: { name: "theName" }
@@ -18,14 +18,14 @@ namespace tests
 
             m.assertEqual("theSchema", event.schema)
             m.assertEqual("theName", event.data.name)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         @describe("payload serialization")
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("serializes the payload parameters")
-        function serializesPayloadParameters()
+        sub serializesPayloadParameters()
             event = new Snowplow.Internal.SelfDescribing({
                 schema: "theSchema",
                 data: { name: "theName" }
@@ -38,7 +38,7 @@ namespace tests
             m.assertNotEmpty(unstructured.schema)
             m.assertEqual("theSchema", unstructured.data.schema)
             m.assertEqual("theName", unstructured.data.data.name)
-        end function
+        end sub
 
     end class
 end namespace
