@@ -17,9 +17,9 @@
     "dist/**/!(*.spec.)*"
   ],
   "scripts": {
-    "build": "node scripts/run.js",
-    "build-demo-app": "node scripts/run-demo-app.js",
-    "build-tests": "node scripts/run-tests.js",
+    "build": "bsc --project bsconfig-dist.json",
+    "build-demo-app": "bsc --project bsconfig-demo-app.json",
+    "build-tests": "bsc --project bsconfig-tests.json",
     "package": "bsc --create-package",
     "lint": "bslint --project bsconfig-demo-app.json && bslint --project bsconfig-tests.json",
     "deploy": "node scripts/run-deploy.js",
