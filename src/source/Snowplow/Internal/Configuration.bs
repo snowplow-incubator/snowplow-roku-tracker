@@ -23,6 +23,7 @@ namespace Snowplow.Internal
         ' subject
         domainUserId as string
         networkUserId as string
+        userId as string
         appId as string
         deviceContext = true
         RIDATracking = true
@@ -41,6 +42,7 @@ namespace Snowplow.Internal
             if config.subject <> invalid
                 m.domainUserId = config.subject.domainUserId
                 m.networkUserId = config.subject.networkUserId
+                m.userId = config.subject.userId
                 m.appId = config.subject.appId
                 m.deviceContext = config.subject.deviceContext ?? true
                 m.RIDATracking = config.subject.RIDATracking ?? true

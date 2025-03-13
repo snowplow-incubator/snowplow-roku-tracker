@@ -17,6 +17,7 @@ namespace Snowplow.Internal
         trackerNamespace as string
         domainUserId as string
         networkUserId as string
+        userId as string
         appId as string
         eventId as string
         trackerVersion as string
@@ -47,6 +48,7 @@ namespace Snowplow.Internal
         private E_LANGUAGE = "lang"
         private E_NETWORK_UID = "tnuid"
         private E_DOMAIN_UID = "duid"
+        private E_USER_ID = "uid"
         private E_CONTEXT = "co"
         protected E_UNSTRUCTURED = "ue_pr"
 
@@ -89,6 +91,7 @@ namespace Snowplow.Internal
             ' optional properties
             if m.domainUserId <> invalid then payload[m.E_DOMAIN_UID] = m.domainUserId
             if m.networkUserId <> invalid then payload[m.E_NETWORK_UID] = m.networkUserId
+            if m.userId <> invalid then payload[m.E_USER_ID] = m.userId
             if m.appId <> invalid then payload[m.E_APPID] = m.appId
             if m.trueTimestamp <> invalid then payload[m.E_TRUE_TIMESTAMP] = m.trueTimestamp
             if m.timezone <> invalid then payload[m.E_TIMEZONE] = m.timezone
