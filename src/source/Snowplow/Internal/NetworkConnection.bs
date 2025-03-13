@@ -129,7 +129,7 @@ namespace Snowplow.Internal
 
             responseEvent = invalid
             requestDetails = {
-                timesTried: 0,
+                timesTried: 0
             }
 
             'while we still have try times

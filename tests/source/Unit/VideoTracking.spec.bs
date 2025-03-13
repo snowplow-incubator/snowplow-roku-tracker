@@ -134,7 +134,7 @@ namespace tests
                 },
                 duration: 1000,
                 content: {
-                    Live: false
+                    Live: false,
                     Title: "Big Buck Bunny"
                 },
                 position: position,

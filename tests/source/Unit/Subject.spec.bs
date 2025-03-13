@@ -17,7 +17,7 @@ namespace tests
                 subject: {
                     domainUserId: "theDomainUserId",
                     networkUserId: "theNetworkUserId",
-                    appId: "theAppId",
+                    appId: "theAppId"
                 }
             })
             subject = new Snowplow.Internal.Subject(configuration)
