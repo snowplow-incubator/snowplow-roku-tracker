@@ -35,12 +35,12 @@
     "Matus Tomlein"
   ],
   "devDependencies": {
-    "@rokucommunity/bslint": "^0.5.0",
-    "brighterscript": "^0.39.4",
+    "@rokucommunity/bslint": "^0.8.28",
+    "brighterscript": "^0.69.1",
     "dotenv": "^16.4.7",
-    "roku-debug": "^0.8.6",
-    "roku-deploy": "^3.5.2",
-    "rooibos-roku": "^4.4.2"
+    "roku-debug": "^0.19.1",
+    "roku-deploy": "^3.12.4",
+    "rooibos-roku": "^5.15.5"
   },
   "dependencies": {
     "log": "npm:roku-log@^0.5.1",

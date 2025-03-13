@@ -1,7 +1,7 @@
 {
     "rootDir": "src",
-    "stagingFolderPath": "build",
-    "retainStagingFolder": true,
+    "stagingDir": "build",
+    "retainStagingDir": true,
     "autoImportComponentScript": true,
     "ignoreErrorCodes": [1107],
     "sourceMap": true,
