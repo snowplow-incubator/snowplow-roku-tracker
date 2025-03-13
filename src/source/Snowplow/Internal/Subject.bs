@@ -85,7 +85,7 @@ namespace Snowplow.Internal
 
         private function getTrackerVersion() as string
             constants = new Snowplow.Internal.TrackerConstants()
-            return constants.TRACKER_VERSION
+            return "roku-" + constants.TRACKER_VERSION
         end function
     end class
 end namespace
