@@ -1,0 +1,112 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/ClientSessionContext.bs"
+
+namespace Snowplow.Internal
+    class ClientSessionContextBuilder
+        ' from config
+        tracker as string
+        sessionLifetimeSeconds as integer
+
+        ' complex utilities
+        context as object
+        timespan as object
+        registry as object
+        deviceInfo as object
+        datetime as object
+
+        ' current state
+        userId as string
+        sessionId as string
+        sessionIndex as integer
+        eventIndex as integer
+        previousSessionId as string
+
+        sub new(configuration as object)
+            m.tracker = configuration.trackerNamespace
+            m.sessionLifetimeSeconds = configuration.sessionLifetimeSeconds
+
+            m.context = new Snowplow.Internal.ClientSessionContext()
+            m.timespan = CreateObject("roTimespan")
+            m.registry = CreateObject("roRegistrySection", Snowplow.Internal.TrackerConstants.REGISTRY_STATE_NAMESPACE)
+            m.deviceInfo = CreateObject("roDeviceInfo")
+            m.datetime = CreateObject("roDateTime")
+
+            ' restore previous state
+            m.userId = m.registry.Read(`${m.tracker}:userId`)
+            if m.userId = "" then m.userId = m.deviceInfo.GetRandomUUID()
+
+            storedSessionId = m.registry.Read(`${m.tracker}:sessionId`)
+            m.previousSessionId = storedSessionId <> "" ? storedSessionId : invalid
+
+            ' default state for new session
+            m.sessionId = m.deviceInfo.GetRandomUUID()
+            m.sessionIndex = 1 + StrToI(m.registry.Read(`${m.tracker}:sessionIndex`))
+            m.eventIndex = 0
+        end sub
+
+        sub updateState(event as object, setAtomic = false as boolean, anonUser = false as boolean, anonSession = false as boolean)
+            ' check session expiry
+            if m.timespan.TotalSeconds() > m.sessionLifetimeSeconds
+                m.previousSessionId = m.sessionId
+                m.sessionIndex++
+                m.sessionId = m.deviceInfo.GetRandomUUID()
+                m.eventIndex = 0
+            end if
+            m.timespan.Mark()
+
+            m.eventIndex++
+
+            ' update context
+            if anonSession
+                m.context.sessionId = Snowplow.Internal.TrackerConstants.ANON_UUID
+                m.context.sessionIndex = 0
+                m.context.eventIndex = 0
+                m.context.previousSessionId = invalid
+                m.context.firstEventId = invalid
+                m.context.firstEventTimestamp = invalid
+            else
+                if m.eventIndex = 1
+                    m.context.firstEventId = event.eventId
+
+                    m.datetime.FromSecondsLong(Val(event.deviceTimestamp) / 1000)
+                    m.context.firstEventTimestamp = m.datetime.ToISOString("milliseconds")
+                end if
+                m.context.sessionId = m.sessionId
+                m.context.sessionIndex = m.sessionIndex
+                m.context.eventIndex = m.eventIndex
+                m.context.previousSessionId = m.previousSessionId
+            end if
+
+            if anonUser
+                m.context.userId = Snowplow.Internal.TrackerConstants.ANON_UUID
+            else
+                m.context.userId = m.userId
+            end if
+
+            ' promote to atomic
+            if setAtomic
+                if event.domainUserId = invalid then event.domainUserId = m.context.userId
+                if event.domainSessionId = invalid
+                    event.domainSessionId = m.context.sessionId
+                    event.domainSessionIndex = m.context.sessionIndex
+                end if
+            end if
+        end sub
+
+        function getContext(configuration as object) as dynamic
+            if not configuration.sessionContext then return invalid
+            return m.context
+        end function
+
+    end class
+end namespace

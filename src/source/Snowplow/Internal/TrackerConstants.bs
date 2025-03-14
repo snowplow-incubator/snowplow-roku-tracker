@@ -12,6 +12,12 @@
 namespace Snowplow.Internal.TrackerConstants
     const TRACKER_VERSION = "0.2.0"
 
+    const REGISTRY_STATE_NAMESPACE = "_snowplow_state"
+    const ANON_UUID = "00000000-0000-0000-0000-000000000000"
+    const SERVER_ANON_HEADER = "SP-Anonymous"
+
+    const DEFAULT_SESSION_LIFETIME_SECONDS = 1800
+
     const DEFAULT_NAMESPACE = "default"
     const DEFAULT_METHOD = "POST"
 

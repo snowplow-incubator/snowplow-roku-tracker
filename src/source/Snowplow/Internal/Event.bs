@@ -16,6 +16,8 @@ namespace Snowplow.Internal
     class Event
         trackerNamespace as string
         domainUserId as string
+        domainSessionId as string
+        domainSessionIndex as integer
         networkUserId as string
         userId as string
         appId as string
@@ -48,6 +50,8 @@ namespace Snowplow.Internal
         private E_LANGUAGE = "lang"
         private E_NETWORK_UID = "tnuid"
         private E_DOMAIN_UID = "duid"
+        private E_DOMAIN_SID = "sid"
+        private E_DOMAIN_SIDX = "vid"
         private E_USER_ID = "uid"
         private E_CONTEXT = "co"
         protected E_UNSTRUCTURED = "ue_pr"
@@ -90,6 +94,8 @@ namespace Snowplow.Internal
 
             ' optional properties
             if m.domainUserId <> invalid then payload[m.E_DOMAIN_UID] = m.domainUserId
+            if m.domainSessionId <> invalid then payload[m.E_DOMAIN_SID] = m.domainSessionId
+            if m.domainSessionIndex <> invalid then payload[m.E_DOMAIN_SIDX] = m.domainSessionIndex
             if m.networkUserId <> invalid then payload[m.E_NETWORK_UID] = m.networkUserId
             if m.userId <> invalid then payload[m.E_USER_ID] = m.userId
             if m.appId <> invalid then payload[m.E_APPID] = m.appId

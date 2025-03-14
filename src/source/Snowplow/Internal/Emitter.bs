@@ -26,10 +26,10 @@ namespace Snowplow.Internal
             url = m.createUrl()
             if m.configuration.method = "GET"
                 params = event.preparePayloadToSend()
-                success = m.networkConnection.getRequest(url, params, m.getRetryCount())
+                success = m.networkConnection.getRequest(url, params, m.getRetryCount(), m.configuration.serverAnonymous)
             else
                 data = event.prepareDataToSend()
-                success = m.networkConnection.postRequest(url, data, m.getRetryCount())
+                success = m.networkConnection.postRequest(url, data, m.getRetryCount(), m.configuration.serverAnonymous)
             end if
 
             if not success

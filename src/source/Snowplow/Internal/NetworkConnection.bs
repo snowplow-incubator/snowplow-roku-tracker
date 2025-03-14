@@ -41,18 +41,20 @@ namespace Snowplow.Internal
             m.log = new log.Logger("Snowplow")
         end sub
 
-        function postRequest(url as string, body as dynamic, retryCount as integer) as boolean
+        function postRequest(url as string, body as dynamic, retryCount as integer, anonymous = false as boolean) as boolean
             response = m.request("POST", url, {
                 json: body,
-                retryCount: retryCount
+                retryCount: retryCount,
+                anonymous: anonymous
             })
             return response.ok
         end function
 
-        function getRequest(url as string, params as dynamic, retryCount as integer) as boolean
+        function getRequest(url as string, params as dynamic, retryCount as integer, anonymous = false as boolean) as boolean
             response = m.request("GET", url, {
                 params: params,
-                retryCount: retryCount
+                retryCount: retryCount,
+                anonymous: anonymous
             })
             return response.ok
         end function
@@ -61,28 +63,21 @@ namespace Snowplow.Internal
             _params = {}
             _headers = {}
             ' _cookies = invalid
-            _data = invalid
             _json = invalid
             _timeout = 30000
             _retryCount = 0
             ' _allow_redirects = true
             _verify = "common:/certs/ca-bundle.crt"
 
+            requestHeaders = rokurequests_Requests_headers()
+            requestHeaders.addHeadersAA(_headers)
+
             if args <> invalid and type(args) = "roAssociativeArray"
                 if args.params <> invalid and type(args.params) = "roAssociativeArray"
                     _params = args.params
                 end if
-                if args.headers <> invalid and type(args.headers) = "roAssociativeArray"
-                    _headers = args.headers
-                end if
-                if args.data <> invalid and (type(args.data) = "String" or type(args.data) = "roString")
-                    _data = args.data
-                end if
                 if args.json <> invalid and type(args.json) = "roAssociativeArray"
                     _json = FormatJson(args.json)
-                end if
-                if args.timeout <> invalid and (type(args.timeout) = "Integer" or type(args.timeout) = "roInteger")
-                    _timeout = args.timeout
                 end if
                 if args.retryCount <> invalid and (type(args.retryCount) = "Integer" or type(args.retryCount) = "roInteger")
                     _retryCount = args.retryCount
@@ -90,18 +85,16 @@ namespace Snowplow.Internal
                 if args.verify <> invalid and (type(args.verify) = "String" or type(args.verify) = "roString")
                     _verify = args.verify
                 end if
+                if args.anonymous
+                    requestHeaders.addHeader(Snowplow.Internal.TrackerConstants.SERVER_ANON_HEADER, "*")
+                end if
             end if
-
-            requestHeaders = rokurequests_Requests_headers()
-            requestHeaders.addHeadersAA(_headers)
 
             requestQueryString = rokurequests_Requests_queryString()
             requestQueryString.addParamsAA(_params)
 
             ' Setup the data (we overwrite JSON if it's provided)
-            if _data <> invalid
-                data = _data
-            else if _json <> invalid
+            if _json <> invalid
                 data = _json
                 requestHeaders.addHeader("Content-Type", "application/json; charset=utf-8")
             else

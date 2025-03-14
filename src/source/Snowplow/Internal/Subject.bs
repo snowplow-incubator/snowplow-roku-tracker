@@ -10,18 +10,22 @@
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
 import "pkg:/source/Snowplow/Internal/DeviceInfoContextBuilder.bs"
+import "pkg:/source/Snowplow/Internal/ClientSessionContextBuilder.bs"
 
 namespace Snowplow.Internal
     class Subject
         configuration as object
         deviceInfoContextBuilder as object
+        sessionContextBuilder as object
 
         sub new(configuration as object)
             m.configuration = configuration
             m.deviceInfoContextBuilder = new Snowplow.Internal.DeviceInfoContextBuilder()
+            m.sessionContextBuilder = new Snowplow.Internal.ClientSessionContextBuilder(configuration)
         end sub
 
         sub updateEvent(event as object)
+            if event.domainSessionId = invalid then event.domainSessionId = m.getDomainUserId()
             if event.domainUserId = invalid then event.domainUserId = m.getDomainUserId()
             if event.networkUserId = invalid then event.networkUserId = m.getNetworkUserId()
             if event.appId = invalid then event.appId = m.getAppId()
@@ -37,7 +41,15 @@ namespace Snowplow.Internal
 
             deviceInfoContext = m.deviceInfoContextBuilder.getContext(m.configuration)
             if deviceInfoContext <> invalid then event.addContext(deviceInfoContext)
+
+            m.sessionContextBuilder.updateState(event, m.configuration.sessionAsCookies)
+            clientSessionContext = m.sessionContextBuilder.getContext(m.configuration)
+            if clientSessionContext <> invalid then event.addContext(clientSessionContext)
         end sub
+
+        private function getDomainSessionId() as dynamic
+            return m.configuration.domainSessionId
+        end function
 
         private function getDomainUserId() as dynamic
             return m.configuration.domainUserId
