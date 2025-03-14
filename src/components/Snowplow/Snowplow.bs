@@ -95,6 +95,5 @@ sub createTracker(trackerNamespace, data)
 end sub
 
 function getNamespaceFromData(data) as string
-    constants = new Snowplow.Internal.TrackerConstants()
-    return data.namespace ?? constants.DEFAULT_NAMESPACE
+    return data.namespace ?? Snowplow.Internal.TrackerConstants.DEFAULT_NAMESPACE
 end function

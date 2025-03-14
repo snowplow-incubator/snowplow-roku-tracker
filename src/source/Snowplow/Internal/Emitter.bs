@@ -8,8 +8,6 @@
 ' software distributed under the Apache License Version 2.0 is distributed on an
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
- 
-import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
 
 import "pkg:/source/roku_modules/log/LogMixin.brs"
 
@@ -44,8 +42,6 @@ namespace Snowplow.Internal
         end function
 
         private function createUrl() as string
-            constants = new Snowplow.Internal.TrackerConstants()
-
             ' collector
             url = m.configuration.collector
             url = url.Trim()
@@ -58,7 +54,7 @@ namespace Snowplow.Internal
             if m.configuration.method = "GET"
                 url += "i"
             else
-                url += constants.PROTOCOL_VENDOR + "/" + constants.PROTOCOL_VERSION
+                url += Snowplow.Internal.TrackerConstants.PROTOCOL_VENDOR + "/" + Snowplow.Internal.TrackerConstants.PROTOCOL_VERSION
             end if
 
             return url

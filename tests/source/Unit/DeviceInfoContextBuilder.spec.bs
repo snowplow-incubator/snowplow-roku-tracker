@@ -1,5 +1,4 @@
 import "pkg:/source/Snowplow/Internal/DeviceInfoContextBuilder.bs"
-import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
 import "pkg:/source/Snowplow/Internal/Configuration.bs"
 
 namespace tests

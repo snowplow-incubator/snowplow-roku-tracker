@@ -29,13 +29,11 @@ namespace Snowplow.Internal
         RIDATracking = true
 
         sub new(config)
-            constants = new Snowplow.Internal.TrackerConstants()
-
-            m.trackerNamespace = config.namespace ?? constants.DEFAULT_NAMESPACE
+            m.trackerNamespace = config.namespace ?? Snowplow.Internal.TrackerConstants.DEFAULT_NAMESPACE
 
             if config.network <> invalid
                 m.collector = config.network.collector
-                m.method = config.network.method ?? constants.DEFAULT_METHOD
+                m.method = config.network.method ?? Snowplow.Internal.TrackerConstants.DEFAULT_METHOD
                 if config.network.retryCount <> invalid then m.retryCount = config.network.retryCount
             end if
 
