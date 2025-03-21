@@ -257,8 +257,8 @@ namespace Snowplow.Internal
             if info.content <> invalid and info.content.contentType <> invalid and info.content.ContentType > 0
                 mappings = {
                     "1": "movie",
-                    "3": "season",
                     "2": "series",
+                    "3": "season",
                     "4": "episode",
                     "5": "audio"
                 }
