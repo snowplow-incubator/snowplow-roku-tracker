@@ -65,6 +65,7 @@ namespace Snowplow.Internal
         private lastPositionPing as dynamic
 
         private stats as object
+        private buffering as boolean
 
         private entities as object
 
@@ -80,6 +81,7 @@ namespace Snowplow.Internal
             m.entities = data.entities ?? data.context ?? []
             m.timer = CreateObject("roDateTime")
             m.startedAt = m.timer.ToISOString("milliseconds")
+            m.buffering = false
 
             if m.media = invalid
                 m.mediaType = invalid
@@ -169,16 +171,29 @@ namespace Snowplow.Internal
                 return m.getEventsForPositionChange(data, info)
             else if field = "control"
                 return m.getEventsForControlChange(data, info)
+            else if field = "duration" and m.captureEvent(MediaTrackingEvent.READY)
+                return [m.createEvent(MediaTrackingEvent.READY, info)]
             else
                 return []
             end if
         end function
 
         private function getEventsForStateChange(state, info) as dynamic
-            if not m.captureEvent(state) then return []
+            events = []
 
-            event = m.createEvent(m.translateEvent(state), info)
-            return [event]
+            if state = RokuMediaState.BUFFERING
+                m.buffering = true
+            else if m.buffering
+                if m.captureEvent(MediaTrackingEvent.BUFFER_START)
+                    events.push(m.createEvent(MediaTrackingEvent.BUFFER_END, info))
+                end if
+                m.buffering = false
+            end if
+
+            if not m.captureEvent(state) then return events
+
+            events.push(m.createEvent(m.translateEvent(state), info))
+            return events
         end function
 
         private function getEventsForControlChange(control, info) as dynamic
@@ -371,7 +386,8 @@ namespace Snowplow.Internal
             return [
                 "position",
                 "state",
-                "control"
+                "control",
+                "duration"
             ]
         end function
 
