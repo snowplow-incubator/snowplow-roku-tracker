@@ -20,6 +20,10 @@ namespace Snowplow.Internal
         private label as dynamic
         private captureEvents as object
         private sentBoundaries as object
+        private pingInterval as integer
+        private lastPositionPing as integer
+
+        private entities as object
 
         ' constants
         private MEDIA_EVENT_PERCENT_PROGRESS = "percentprogress"
@@ -41,6 +45,8 @@ namespace Snowplow.Internal
             m.sentBoundaries = {}
             m.positionInterval = options.positionInterval ?? 5
             m.lastPositionPing = 0
+
+            m.entities = data.entities ?? data.context ?? []
 
             events = options.captureEvents ?? [
                 m.MEDIA_EVENT_PERCENT_PROGRESS,
@@ -181,6 +187,10 @@ namespace Snowplow.Internal
             rokuVideoContext.height = info.height
             rokuVideoContext.errorStr = m.getErrorStr(info)
             event.addContext(rokuVideoContext)
+
+            for each e in m.entities
+                event.addContext(e)
+            end for
         end sub
 
         private function getInfoFields() as object
