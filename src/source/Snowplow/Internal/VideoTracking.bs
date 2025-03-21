@@ -40,7 +40,7 @@ namespace Snowplow.Internal
 
             m.id = CreateObject("roDeviceInfo").GetRandomUUID()
             m.video = data.video
-            m.label = options.label
+            m.label = options.label ?? data.label
             m.captureEvents = {}
             m.sentBoundaries = {}
             m.positionInterval = options.positionInterval ?? 5
