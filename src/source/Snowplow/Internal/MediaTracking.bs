@@ -152,13 +152,13 @@ namespace Snowplow.Internal
 
         sub startObserving(port)
             for each field in m.getObservedFields()
-                m.video.observeField(field, port, m.getInfoFields())
+                m.media.observeField(field, port, m.getInfoFields())
             end for
         end sub
 
         sub stopObserving()
             for each field in m.getObservedFields()
-                m.video.unobserveField(field)
+                m.media.unobserveField(field)
             end for
         end sub
 
@@ -242,7 +242,7 @@ namespace Snowplow.Internal
                     errorDescription: info.errorStr
                 })
             else if eventType = MediaTrackingEvent.PERCENT_PROGRESS
-                payload.Append({ percentProgress: percentProgress })
+                payload.Append({ "percentProgress": percentProgress })
             else if eventType = MediaTrackingEvent.FULLSCREEN_CHANGE
                 payload.Append({})
             else if eventType = MediaTrackingEvent.PICTURE_IN_PICTURE_CHANGE

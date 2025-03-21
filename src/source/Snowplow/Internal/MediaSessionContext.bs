@@ -64,7 +64,7 @@ namespace Snowplow.Internal
             payload[m.MSC_ADS] = m.ads
             payload[m.MSC_AD_BREAKS] = m.adBreaks
             payload[m.MSC_ADS_SKIPPED] = m.adsSkipped
-            payload[m.MSC_CLICKED] = m.adsClicked
+            payload[m.MSC_ADS_CLICKED] = m.adsClicked
             payload[m.MSC_AVG_PLAYBACK_RATE] = m.avgPlaybackRate
             payload[m.MSC_CONTENT_WATCHED] = m.contentWatched
             return payload
