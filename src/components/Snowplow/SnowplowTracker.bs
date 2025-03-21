@@ -30,10 +30,15 @@ sub init()
     m.top.ObserveField("screenView", m.port)
     m.top.ObserveField("selfDescribing", m.port)
     m.top.ObserveField("structured", m.port)
+    m.top.ObserveField("enableAudioTracking", m.port)
+    m.top.ObserveField("enableMediaTracking", m.port)
     m.top.ObserveField("enableVideoTracking", m.port)
+    m.top.ObserveField("disableAudioTracking", m.port)
+    m.top.ObserveField("disableMediaTracking", m.port)
     m.top.ObserveField("disableVideoTracking", m.port)
-
-    m.trackedVideos = []
+    m.top.ObserveField("customAudioEvent", m.port)
+    m.top.ObserveField("customMediaEvent", m.port)
+    m.top.ObserveField("customVideoEvent", m.port)
 
     m.top.functionName = "runLoop"
     m.top.control = "RUN"
@@ -59,13 +64,15 @@ sub runLoop()
                     trackSelfDescribing(data)
                 else if field = "structured"
                     trackStructured(data)
-                else if field = "enableVideoTracking"
-                    trackVideoPlayer(data)
-                else if field = "disableVideoTracking"
-                    stopTrackingVideoPlayer(data)
-                else if node.isSubtype("Video")
+                else if field = "enableAudioTracking" or field = "enableMediaTracking" or field = "enableVideoTracking"
+                    trackMedia(data)
+                else if field = "disableAudioTracking" or field = "disableMediaTracking" or field = "disableVideoTracking"
+                    stopTrackingMedia(data)
+                else if field = "customAudioEvent" or field = "customMediaEvent" or field = "customVideoEvent"
+                    stopTrackingMedia(data)
+                else if node.isSubtype("Video") or node.isSubtype("Audio")
                     info = msg.getInfo()
-                    trackVideoEvents(field, node, info, data)
+                    trackMediaEvents(field, node, info, data)
                 end if
             else
                 m.log.error(`Error: unrecognized event type '${mt}'`)
@@ -118,29 +125,39 @@ sub trackEvent(event as object)
     end if
 end sub
 
-' Enable tracking of a Video node
-' @param {assocarray} data Video properties
-sub trackVideoPlayer(data)
+' Enable tracking of an Audio/Video node
+' @param {assocarray} data Audio/Video properties
+sub trackMedia(data)
     if m.tracker <> invalid
-        m.tracker.trackVideoPlayer(data, m.port)
+        m.tracker.trackMedia(data, m.port)
     else
         m.log.error("Tracker not initialized")
     end if
 end sub
 
-' Stop video tracking and unobserve video
-' @param {assocarray} data Video properties
-sub stopTrackingVideoPlayer(data)
+' Track self describing event with media entities
+' @param {assocarray} data Audio/Video properties
+sub trackMediaEvent(data)
     if m.tracker <> invalid
-        m.tracker.stopTrackingVideoPlayer(data, m.port)
+        m.tracker.trackMediaEvent(data, m.port)
     else
         m.log.error("Tracker not initialized")
     end if
 end sub
 
-sub trackVideoEvents(field, node, info, data)
+' Stop video tracking and unobserve audio/video
+' @param {assocarray} data Audio/Video properties
+sub stopTrackingMedia(data)
     if m.tracker <> invalid
-        m.tracker.trackVideoEvents(field, node, info, data)
+        m.tracker.stopTrackingMedia(data, m.port)
+    else
+        m.log.error("Tracker not initialized")
+    end if
+end sub
+
+sub trackMediaEvents(field, node, info, data)
+    if m.tracker <> invalid
+        m.tracker.trackMediaEvents(field, node, info, data)
     else
         m.log.error("Tracker not initialized")
     end if

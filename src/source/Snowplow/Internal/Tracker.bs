@@ -8,7 +8,8 @@
 ' software distributed under the Apache License Version 2.0 is distributed on an
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
- 
+
+import "pkg:/source/Snowplow/Internal/SelfDescribing.bs"
 import "pkg:/source/Snowplow/Internal/Subject.bs"
 
 import "pkg:/source/roku_modules/log/LogMixin.brs"
@@ -24,7 +25,7 @@ namespace Snowplow.Internal
             m.configuration = configuration
             m.emitter = emitter
             m.subject = new Snowplow.Internal.Subject(configuration)
-            m.trackedVideos = []
+            m.trackedMedia = []
             m.log = new log.Logger("Snowplow")
         end sub
 
@@ -40,49 +41,68 @@ namespace Snowplow.Internal
             m.emitter.configuration = configuration
         end sub
 
-        sub trackVideoPlayer(data, port)
-            video = data.video
-            videoTracking = new Snowplow.Internal.VideoTracking(data)
-            m.trackedVideos.push({
-                video: video,
-                videoTracking: videoTracking
+        sub trackMedia(data, port)
+            media = data.media ?? data.video ?? data.audio
+
+            tracking = new Snowplow.Internal.VideoTracking(data)
+            m.trackedMedia.push({
+                media: media,
+                tracking: tracking,
+                version: version
             })
-            videoTracking.startObserving(port)
+            tracking.startObserving(port)
         end sub
 
-        sub stopTrackingVideoPlayer(data, port)
-            video = data.video
-            videoTracking = m.getVideoTrackingForNode(video)
-            if videoTracking = invalid
-                m.log.error("[tracker] Video tracking not initialized for the video.")
-            else
-                videoTracking.stopObserving()
+        sub trackMediaEvent(data, port)
+            media = data.media ?? data.video ?? data.audio
 
-                trackedVideos = []
-                for each v in m.trackedVideos
-                    if not video.isSameNode(v.video)
-                        trackedVideos.push(v)
-                    end if
+            for each v in m.trackedMedia
+                if not media.isSameNode(v.media) then continue for
+                event = new Snowplow.Internal.SelfDescribing(data)
+                v.tracking.addContext(event, media)
+                m.trackEvent(event)
+            end for
+        end sub
+
+        sub stopTrackingMedia(data, port)
+            media = data.media ?? data.video ?? data.audio
+
+            tracking = m.getMediaTrackingForNode(media)
+            if tracking = invalid
+                m.log.error("[tracker] Media tracking not initialized for the node.")
+            else
+                tracking.stopObserving()
+
+                trackedMedia = []
+                for each v in m.trackedMedia
+                    if media.isSameNode(v.media) then continue for
+                    trackedMedia.push(v)
                 end for
-                m.trackedVideos = trackedVideos
+                m.trackedMedia = trackedMedia
             end if
         end sub
 
-        sub trackVideoEvents(field, node, info, data)
-            videoTracking = m.getVideoTrackingForNode(node)
-            if videoTracking = invalid
-                m.log.error("[tracker] Video tracking not initialized for the video.")
-            else
-                events = videoTracking.getEventsForFieldChange(field, data, info)
-                for each event in events
-                    m.trackEvent(event)
-                end for
+        sub trackMediaEvents(field, node, info, data)
+            found = false
+            for each media in m.trackedMedia
+                if node.isSameNode(media.media)
+                    found = true
+                    tracking = media.tracking
+                    events = tracking.getEventsForFieldChange(field, data, info)
+                    for each event in events
+                        m.trackEvent(event)
+                    end for
+                end if
+            end for
+
+            if not found
+                m.log.error("[tracker] Media tracking not initialized for the video.")
             end if
         end sub
 
         private function getVideoTrackingForNode(node) as dynamic
-            for each video in m.trackedVideos
-                if node.isSameNode(video.video) then return video.videoTracking
+            for each media in m.trackedMedia
+                if node.isSameNode(media.media) then return media.tracking
             end for
             return invalid
         end function

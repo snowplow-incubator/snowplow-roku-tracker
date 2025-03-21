@@ -149,7 +149,7 @@ namespace Snowplow.Internal
             return event
         end function
 
-        private sub addContext(event as object, info as object)
+        sub addContext(event as object, info as object)
             mediaPlayerContext = new Snowplow.Internal.MediaPlayerContext()
             mediaPlayerContext.currentTime = info.position
             mediaPlayerContext.duration = info.duration
@@ -171,7 +171,7 @@ namespace Snowplow.Internal
             rokuVideoContext.contentType = m.getContentType(info)
             rokuVideoContext.streamFormat = m.getStreamFormat(info)
             rokuVideoContext.streamUrl = m.getStreamUrl(info)
-            rokuVideoContext.videoFormat = m.getVideoFormat(info)
+            rokuVideoContext.videoFormat = m.getMediaFormat(info)
             rokuVideoContext.isUnderrun = m.isUnderrun(info)
             rokuVideoContext.isResumed = m.isResumed(info)
             rokuVideoContext.measuredBitrate = m.getMeasuredBitrate(info)
@@ -193,6 +193,7 @@ namespace Snowplow.Internal
                 "state",
                 "loop",
                 "mute",
+                "audioFormat",
                 "videoFormat",
                 "playbackSpeed",
                 "width",
@@ -325,8 +326,9 @@ namespace Snowplow.Internal
             return invalid
         end function
 
-        private function getVideoFormat(info) as dynamic
+        private function getMediaFormat(info) as dynamic
             if m.isNonEmptyString(info.videoFormat) then return info.videoFormat
+            if m.isNonEmptyString(info.audioFormat) then return info.audioFormat
             return invalid
         end function
 
