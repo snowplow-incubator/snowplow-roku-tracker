@@ -138,7 +138,7 @@ namespace Snowplow.Internal
             return payload
         end function
 
-        protected override function getSchema() as dynamic
+        protected override function getSchema() as string
             return m.DI_SCHEMA_DEVICE_CONTEXT
         end function
 

@@ -58,7 +58,7 @@ namespace Snowplow.Internal
             return payload
         end function
 
-        protected override function getSchema() as dynamic
+        protected override function getSchema() as string
             return m.MPC_SCHEMA_MEDIA_PLAYER
         end function
     end class

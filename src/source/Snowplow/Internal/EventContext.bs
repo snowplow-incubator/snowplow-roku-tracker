@@ -26,7 +26,7 @@ namespace Snowplow.Internal
             return m.data
         end function
 
-        protected override function getSchema() as dynamic
+        protected override function getSchema() as string
             return m.schema
         end function
     end class
