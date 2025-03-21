@@ -10,7 +10,7 @@
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
 import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
- 
+
 namespace Snowplow.Internal
     class MediaPlayerContext extends BaseEventContext
         currentTime as double
@@ -35,7 +35,7 @@ namespace Snowplow.Internal
         private MPC_PERCENT_PROGRESS = "percentProgress"
         private MPC_PLAYBACK_RATE = "playbackRate"
         private MPC_VOLUME = "volume"
-        
+
         ' constants
         private MPC_SCHEMA_MEDIA_PLAYER = "iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/1-0-0"
 

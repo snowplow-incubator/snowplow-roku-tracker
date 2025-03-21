@@ -10,7 +10,7 @@
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
 import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
- 
+
 namespace Snowplow.Internal
     class EventContext extends BaseEventContext
         data as object
