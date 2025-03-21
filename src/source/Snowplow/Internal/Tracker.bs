@@ -9,6 +9,7 @@
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
+import "pkg:/source/Snowplow/Internal/MediaTracking.bs"
 import "pkg:/source/Snowplow/Internal/SelfDescribing.bs"
 import "pkg:/source/Snowplow/Internal/Subject.bs"
 
@@ -43,8 +44,17 @@ namespace Snowplow.Internal
 
         sub trackMedia(data, port)
             media = data.media ?? data.video ?? data.audio
+            version = data.version ?? 1
 
-            tracking = new Snowplow.Internal.VideoTracking(data)
+            tracking = invalid
+            if version = 1
+                tracking = new Snowplow.Internal.VideoTracking(data)
+            else if version = 2
+                tracking = new Snowplow.Internal.MediaTracking(data)
+            else
+                m.log.error(`[tracker] Unknown media tracking version: ${version}`)
+                return
+            end if
             m.trackedMedia.push({
                 media: media,
                 tracking: tracking,
@@ -66,8 +76,9 @@ namespace Snowplow.Internal
 
         sub stopTrackingMedia(data, port)
             media = data.media ?? data.video ?? data.audio
+            version = data.version ?? 1
 
-            tracking = m.getMediaTrackingForNode(media)
+            tracking = m.getMediaTrackingForNode(media, version)
             if tracking = invalid
                 m.log.error("[tracker] Media tracking not initialized for the node.")
             else
@@ -75,7 +86,7 @@ namespace Snowplow.Internal
 
                 trackedMedia = []
                 for each v in m.trackedMedia
-                    if media.isSameNode(v.media) then continue for
+                    if media.isSameNode(v.media) and v.version = version then continue for
                     trackedMedia.push(v)
                 end for
                 m.trackedMedia = trackedMedia
@@ -100,9 +111,9 @@ namespace Snowplow.Internal
             end if
         end sub
 
-        private function getVideoTrackingForNode(node) as dynamic
+        private function getMediaTrackingForNode(node, version) as dynamic
             for each media in m.trackedMedia
-                if node.isSameNode(media.media) then return media.tracking
+                if node.isSameNode(media.media) and media.version = version then return media.tracking
             end for
             return invalid
         end function

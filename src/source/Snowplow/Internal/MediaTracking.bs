@@ -1,0 +1,527 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/MediaPlayerEventV2.bs"
+import "pkg:/source/Snowplow/Internal/MediaPlayerContextV2.bs"
+import "pkg:/source/Snowplow/Internal/MediaSessionContext.bs"
+import "pkg:/source/Snowplow/Internal/RokuVideoContext.bs"
+
+namespace Snowplow.Internal
+    const UNSTRUCT_PAYLOAD_KEY = "ue_pr"
+    const MEDIA_EVENT_SCHEMA_PREFIX = "iglu:com.snowplowanalytics.snowplow.media/"
+
+    enum RokuMediaState
+        ERROR = "error"
+        FINISHED = "finished"
+        STOPPED = "stopped"
+        STOPPING = "stopping"
+        PAUSED = "paused"
+        PLAYING = "playing"
+        BUFFERING = "buffering"
+        NONE = "none"
+    end enum
+
+    enum MediaTrackingEvent
+        READY = "ready"
+        PLAY = "play"
+        PING = "ping"
+        PERCENT_PROGRESS = "percent_progress"
+        PAUSE = "pause"
+        END = "end"
+        ERROR = "error"
+
+        BUFFER_START = "buffer_start"
+        BUFFER_END = "buffer_end"
+        SEEK_START = "seek_start"
+        SEEK_END = "seek_end"
+
+        FULLSCREEN_CHANGE = "fullscreen_change"
+        PICTURE_IN_PICTURE_CHANGE = "picture_in_picture_change"
+        PLAYBACK_RATE_CHANGE = "playback_rate_change"
+        QUALITY_CHANGE = "quality_change"
+        VOLUME_CHANGE = "volume_change"
+    end enum
+
+    class MediaTracking
+        private id as string
+        private media as object
+
+        private label as dynamic
+        private mediaType as dynamic
+        private startedAt as string
+
+        private captureEvents as object
+        private sentBoundaries as object
+        private pingInterval as dynamic
+        private maxPausedPings as dynamic
+        private lastPositionPing as dynamic
+
+        private stats as object
+
+        private entities as object
+
+        private timer as object
+
+
+        sub new(data)
+            options = data.options ?? {}
+
+            m.media = data.media ?? data.video ?? data.audio
+            m.id = data.id ?? options.id
+            if m.id = invalid then m.id = CreateObject("roDeviceInfo").GetRandomUUID()
+            m.entities = data.entities ?? data.context ?? []
+            m.timer = CreateObject("roDateTime")
+            m.startedAt = m.timer.ToISOString("milliseconds")
+
+            if m.media = invalid
+                m.mediaType = invalid
+            else
+                m.mediaType = LCase(m.media.Subtype())
+            end if
+
+            m.label = data.label ?? options.label
+            m.captureEvents = {}
+            m.sentBoundaries = {}
+
+            pings = data.pings ?? true
+
+            if pings
+                m.pingInterval = data.pingInterval ?? options.positionInterval ?? 30
+                m.maxPausedPings = data.maxPausedPings ?? 1
+                m.lastPositionPing = 0
+            end if
+
+            sessions = data.sessions ?? true
+
+            if sessions
+                m.stats = {
+                    timePlayed: 0,
+                    timePaused: 0,
+                    timePlayedMuted: 0,
+                    timeSpentAds: 0,
+                    timeBuffering: 0,
+                    ads: 0,
+                    adBreaks: 0,
+                    adsSkipped: 0,
+                    adsClicked: 0,
+                    avgPlaybackRate: 0,
+                    contentWatched: 0
+                }
+            else
+                m.stats = invalid
+            end if
+
+
+            events = data.captureEvents ?? options.captureEvents ?? [
+                MediaTrackingEvent.READY,
+                MediaTrackingEvent.PLAY,
+                MediaTrackingEvent.PING,
+                MediaTrackingEvent.PERCENT_PROGRESS,
+                MediaTrackingEvent.PAUSE,
+                MediaTrackingEvent.END,
+                MediaTrackingEvent.ERROR,
+                MediaTrackingEvent.BUFFER_START,
+                MediaTrackingEvent.BUFFER_END,
+                MediaTrackingEvent.SEEK_START,
+                MediaTrackingEvent.SEEK_END,
+                MediaTrackingEvent.FULLSCREEN_CHANGE,
+                MediaTrackingEvent.PICTURE_IN_PICTURE_CHANGE,
+                MediaTrackingEvent.PLAYBACK_RATE_CHANGE,
+                MediaTrackingEvent.QUALITY_CHANGE,
+                MediaTrackingEvent.VOLUME_CHANGE
+            ]
+
+            for each event in events
+                m.captureEvents[m.translateEvent(event)] = true
+            end for
+
+            ' m.boundaries
+            boundaries = data.boundaries ?? options.boundaries ?? [25, 50, 75]
+            for each boundary in boundaries
+                m.sentBoundaries[m.toBoundaryKey(boundary)] = false
+            end for
+        end sub
+
+        sub startObserving(port)
+            for each field in m.getObservedFields()
+                m.video.observeField(field, port, m.getInfoFields())
+            end for
+        end sub
+
+        sub stopObserving()
+            for each field in m.getObservedFields()
+                m.video.unobserveField(field)
+            end for
+        end sub
+
+        function getEventsForFieldChange(field, data, info) as dynamic
+            if field = "state"
+                return m.getEventsForStateChange(data, info)
+            else if field = "position"
+                return m.getEventsForPositionChange(data, info)
+            else if field = "control"
+                return m.getEventsForControlChange(data, info)
+            else
+                return []
+            end if
+        end function
+
+        private function getEventsForStateChange(state, info) as dynamic
+            if not m.captureEvent(state) then return []
+
+            event = m.createEvent(m.translateEvent(state), info)
+            return [event]
+        end function
+
+        private function getEventsForControlChange(control, info) as dynamic
+            if not m.captureEvent(control) then return []
+
+            event = m.createEvent(m.translateEvent(control), info)
+            return [event]
+        end function
+
+        private function getEventsForPositionChange(position, info) as dynamic
+            events = []
+
+            percentageProgressEvent = m.getPercentageProgressEventForPositionChange(info)
+            if percentageProgressEvent <> invalid then events.push(percentageProgressEvent)
+
+            positionEvent = m.getPositionEventForPositionChange(info)
+            if positionEvent <> invalid then events.push(positionEvent)
+
+            return events
+        end function
+
+        private function getPercentageProgressEventForPositionChange(info) as dynamic
+            if not m.captureEvent(MediaTrackingEvent.PERCENT_PROGRESS) then return invalid
+
+            boundary = m.getCurrentPercentBoundary(info)
+            if boundary <> invalid and not m.sentBoundaries[m.toBoundaryKey(boundary)]
+                event = m.createEvent(MediaTrackingEvent.PERCENT_PROGRESS, info)
+                m.sentBoundaries[m.toBoundaryKey(boundary)] = true
+                return event
+            end if
+
+            return invalid
+        end function
+
+        private function getPositionEventForPositionChange(info) as dynamic
+            if not m.captureEvent(MediaTrackingEvent.PING) then return invalid
+
+            if m.pingInterval <> invalid and Abs(info.position - m.lastPositionPing) >= m.pingInterval
+                m.lastPositionPing = info.position
+                event = m.createEvent(MediaTrackingEvent.PING, info)
+                return event
+            end if
+
+            return invalid
+        end function
+
+        private function createEvent(eventType as string, info as object) as object
+            payload = m.extractPayload(eventType, info, m.getPercentProgress(info))
+            event = new Snowplow.Internal.MediaPlayerEventV2(eventType, payload)
+            m.addContext(event, info)
+            return event
+        end function
+
+        private function extractPayload(eventType as string, info as object, percentProgress as dynamic) as object
+            payload = {}
+
+            if eventType = MediaTrackingEvent.ERROR
+                payload.Append({
+                    errorCode: info.errorCode,
+                    errorName: info.errorMsg,
+                    errorDescription: info.errorStr
+                })
+            else if eventType = MediaTrackingEvent.PERCENT_PROGRESS
+                payload.Append({ percentProgress: percentProgress })
+            else if eventType = MediaTrackingEvent.FULLSCREEN_CHANGE
+                payload.Append({})
+            else if eventType = MediaTrackingEvent.PICTURE_IN_PICTURE_CHANGE
+                payload.Append({})
+            else if eventType = MediaTrackingEvent.PLAYBACK_RATE_CHANGE
+                payload.Append({})
+            else if eventType = MediaTrackingEvent.QUALITY_CHANGE
+                payload.Append({})
+            else if eventType = MediaTrackingEvent.VOLUME_CHANGE
+                payload.Append({})
+            end if
+
+            return payload
+        end function
+
+        sub addContext(event as object, info as object)
+            mediaPlayerContext = new Snowplow.Internal.MediaPlayerContextV2()
+            mediaPlayerContext.currentTime = info.position
+            mediaPlayerContext.duration = info.duration
+            mediaPlayerContext.ended = info.state = "finished"
+            mediaPlayerContext.fullscreen = true
+            if info.content <> invalid then mediaPlayerContext.livestream = info.content.Live
+            mediaPlayerContext.label = m.label
+            mediaPlayerContext.loop = info.loop ?? false
+            mediaPlayerContext.mediaType = m.mediaType
+            mediaPlayerContext.muted = info.mute ?? false
+            mediaPlayerContext.paused = info.state = "paused"
+            mediaPlayerContext.pictureInPicture = invalid
+            mediaPlayerContext.playbackRate = info.playbackSpeed ?? 1
+            mediaPlayerContext.playerType = `com.roku-${m.mediaType}`
+            mediaPlayerContext.quality = CreateObject("roDeviceInfo").GetVideoMode()
+            mediaPlayerContext.volume = 100
+            event.addContext(mediaPlayerContext)
+
+            if not m.stats = invalid
+                m.updateStats(event, info)
+                mediaSessionContext = new Snowplow.Internal.MediaSessionContext()
+                mediaSessionContext.id = m.id
+                mediaSessionContext.startedAt = m.startedAt
+                mediaSessionContext.pingInterval = m.pingInterval
+                mediaSessionContext.timePlayed = m.stats.timePlayed
+                mediaSessionContext.timePaused = m.stats.timePaused
+                mediaSessionContext.timePlayedMuted = m.stats.timePlayedMuted
+                mediaSessionContext.timeSpentAds = m.stats.timeSpentAds
+                mediaSessionContext.timeBuffering = m.stats.timeBuffering
+                mediaSessionContext.ads = m.stats.ads
+                mediaSessionContext.adBreaks = m.stats.adBreaks
+                mediaSessionContext.adsSkipped = m.stats.adsSkipped
+                mediaSessionContext.adsClicked = m.stats.adsClicked
+                mediaSessionContext.avgPlaybackRate = m.stats.avgPlaybackRate
+                mediaSessionContext.contentWatched = m.stats.contentWatched
+                event.addContext(mediaSessionContext)
+            end if
+
+            rokuVideoContext = new Snowplow.Internal.RokuVideoContext()
+            rokuVideoContext.videoId = m.id
+            rokuVideoContext.contentId = m.getContentId(info)
+            rokuVideoContext.contentTitle = m.getContentTitle(info)
+            rokuVideoContext.contentUrl = m.getContentUrl(info)
+            rokuVideoContext.contentType = m.getContentType(info)
+            rokuVideoContext.streamFormat = m.getStreamFormat(info)
+            rokuVideoContext.streamUrl = m.getStreamUrl(info)
+            rokuVideoContext.videoFormat = m.getMediaFormat(info)
+            rokuVideoContext.isUnderrun = m.isUnderrun(info)
+            rokuVideoContext.isResumed = m.isResumed(info)
+            rokuVideoContext.measuredBitrate = m.getMeasuredBitrate(info)
+            rokuVideoContext.streamBitrate = m.getStreamBitrate(info)
+            rokuVideoContext.timeToStartStreaming = info.timeToStartStreaming
+            rokuVideoContext.width = info.width
+            rokuVideoContext.height = info.height
+            rokuVideoContext.errorStr = m.getErrorStr(info)
+            event.addContext(rokuVideoContext)
+
+            for each e in m.entities
+                event.addContext(e)
+            end for
+        end sub
+
+        private sub updateStats(event as object, info as object)
+            payload = event.preparePayloadToSend()
+            unstruct = payload[UNSTRUCT_PAYLOAD_KEY]
+
+            if unstruct = invalid then return
+
+            schema = ParseJson(unstruct).data.schema
+
+            if Instr(1, schema, MEDIA_EVENT_SCHEMA_PREFIX) = 0 then return
+
+            m.stats = {
+                timePlayed: 0,
+                timePaused: 0,
+                timePlayedMuted: 0,
+                timeSpentAds: 0,
+                timeBuffering: 0,
+                ads: 0,
+                adBreaks: 0,
+                adsSkipped: 0,
+                adsClicked: 0,
+                avgPlaybackRate: 0,
+                contentWatched: 0
+            }
+        end sub
+
+        private function getInfoFields() as object
+            return [
+                "audioFormat",
+                "content",
+                "duration",
+                "errorCode",
+                "errorMsg",
+                "errorStr",
+                "height",
+                "loop",
+                "mute",
+                "playbackSpeed",
+                "position",
+                "state",
+                "streamInfo",
+                "timeToStartStreaming",
+                "videoFormat",
+                "width"
+            ]
+        end function
+
+        private function getObservedFields() as object
+            return [
+                "position",
+                "state",
+                "control"
+            ]
+        end function
+
+        private function getPercentProgress(info as object) as dynamic
+            if info.position <> invalid and info.duration <> invalid and info.duration > 0
+                percentage = 100 * info.position / info.duration
+                if type(percentage) = "Integer" then return percentage
+                return Int(percentage)
+            else
+                return invalid
+            end if
+        end function
+
+        private function getCurrentPercentBoundary(info as object) as dynamic
+            percentProgress = m.getPercentProgress(info)
+            if percentProgress = invalid then return invalid
+
+            boundary = invalid
+            for each b in m.sentBoundaries
+                boundaryToSend = b.toInt()
+                if percentProgress >= boundaryToSend and boundaryToSend > (boundary ?? -1)
+                    boundary = boundaryToSend
+                end if
+            end for
+
+            return boundary
+        end function
+
+        private function translateEvent(eventName as string) as string
+            if eventName = RokuMediaState.BUFFERING
+                return MediaTrackingEvent.BUFFER_START
+            else if eventName = RokuMediaState.PLAYING
+                return MediaTrackingEvent.PLAY
+            else if eventName = RokuMediaState.FINISHED
+                return MediaTrackingEvent.END
+            else if eventName = RokuMediaState.PAUSED
+                return MediaTrackingEvent.PAUSE
+            else if eventName = RokuMediaState.ERROR
+                return MediaTrackingEvent.ERROR
+            else if eventName = RokuMediaState.STOPPED
+                return eventName
+            else if eventName = RokuMediaState.STOPPING
+                return eventName
+            else if eventName = RokuMediaState.NONE
+                return eventName
+            else
+                return eventName
+            end if
+        end function
+
+        private function captureEvent(eventName) as boolean
+            return m.captureEvents[m.translateEvent(eventName)] ?? false
+        end function
+
+        private function toBoundaryKey(percentage) as string:
+            return Int(percentage).ToStr()
+        end function
+
+        private function getContentType(info) as dynamic
+            if info.content <> invalid and info.content.contentType <> invalid and info.content.ContentType > 0
+                mappings = {
+                    "1": "movie",
+                    "2": "series",
+                    "3": "season",
+                    "4": "episode",
+                    "5": "audio"
+                }
+                return mappings[info.content.ContentType.ToStr()]
+            else
+                return invalid
+            end if
+        end function
+
+        private function getContentId(info) as dynamic
+            if info.content <> invalid
+                contentId = info.content.id
+                if m.isNonEmptyString(info.content.id)
+                    return contentId
+                else if m.isNonEmptyString(info.content.video_id)
+                    return info.content.video_id
+                end if
+            end if
+            return invalid
+        end function
+
+        private function getContentTitle(info) as dynamic
+            if info.content <> invalid
+                title = info.content.title
+                if m.isNonEmptyString(title) then return title
+            end if
+            return invalid
+        end function
+
+        private function getContentUrl(info) as dynamic
+            if info.content <> invalid
+                url = info.content.url
+                if m.isNonEmptyString(url) then return url
+            end if
+            return invalid
+        end function
+
+        private function getStreamFormat(info) as dynamic
+            if info.content <> invalid
+                format = info.content.StreamFormat
+                if m.isNonEmptyString(format) and format <> "(null)" then return format
+            end if
+            return invalid
+        end function
+
+        private function getStreamUrl(info) as dynamic
+            if info.streamInfo <> invalid and m.isNonEmptyString(info.streamInfo.streamUrl)
+                return info.streamInfo.streamUrl
+            end if
+            return invalid
+        end function
+
+        private function isUnderrun(info) as dynamic
+            if info.streamInfo <> invalid then return info.streamInfo.isUnderrun
+            return invalid
+        end function
+
+        private function isResumed(info) as dynamic
+            if info.streamInfo <> invalid then return info.streamInfo.isResumed
+            return invalid
+        end function
+
+        private function getMeasuredBitrate(info) as dynamic
+            if info.streamInfo <> invalid then return info.streamInfo.measuredBitrate
+            return invalid
+        end function
+
+        private function getStreamBitrate(info) as dynamic
+            if info.streamInfo <> invalid then return info.streamInfo.streamBitrate
+            return invalid
+        end function
+
+        private function getErrorStr(info) as dynamic
+            if m.isNonEmptyString(info.errorStr) then return info.errorStr
+            return invalid
+        end function
+
+        private function getMediaFormat(info) as dynamic
+            if m.isNonEmptyString(info.videoFormat) then return info.videoFormat
+            if m.isNonEmptyString(info.audioFormat) then return info.audioFormat
+            return invalid
+        end function
+
+        private function isNonEmptyString(s) as boolean
+            return s <> Invalid AND (type(s) = "String" OR type(s) = "roString") AND s <> ""
+        end function
+
+    end class
+end namespace

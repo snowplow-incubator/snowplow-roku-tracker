@@ -1,0 +1,77 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
+
+namespace Snowplow.Internal
+    class MediaSessionContext extends BaseEventContext
+        id as string
+        startedAt as string
+        pingInterval as integer
+        timePlayed as float
+        timePaused as float
+        timePlayedMuted as float
+        timeSpentAds as float
+        timeBuffering as float
+        ads as integer
+        adBreaks as integer
+        adsSkipped as integer
+        adsClicked as integer
+        avgPlaybackRate as float
+        contentWatched as float
+
+        ' parameters
+        private MSC_SESSION_ID = "mediaSessionId"
+        private MSC_STARTED_AT = "startedAt"
+        private MSC_PING_INTERVAL = "pingInterval"
+        private MSC_TIME_PLAYED = "timePlayed"
+        private MSC_TIME_PAUSED = "timePaused"
+        private MSC_TIME_PLAYED_MUTED = "timePlayedMuted"
+        private MSC_TIME_SPENT_ADS = "timeSpentAds"
+        private MSC_TIME_BUFFERING = "timeBuffering"
+        private MSC_ADS = "ads"
+        private MSC_AD_BREAKS = "adBreaks"
+        private MSC_ADS_SKIPPED = "adsSkipped"
+        private MSC_ADS_CLICKED = "adsClicked"
+        private MSC_AVG_PLAYBACK_RATE = "avgPlaybackRate"
+        private MSC_CONTENT_WATCHED = "contentWatched"
+
+        ' constants
+        private MSC_SCHEMA_MEDIA_SESSION = "iglu:com.snowplowanalytics.snowplow.media/session/jsonschema/1-0-0"
+
+        override sub describe(logger)
+            logger.debug(`Session ID ${m.id}, startedAt: ${m.startedAt}, pingInterval: ${m.pingInterval}, timePlayed: ${m.timePlayed}, timePaused: ${m.timePaused}, timePlayedMuted: ${m.timePlayedMuted}, timeSpentAds: ${m.timeSpentAds}, timeBuffering: ${m.timeBuffering}, ads: ${m.ads}, adBreaks: ${m.adBreaks}, adsSkipped: ${m.adsSkipped}, adsClicked: ${m.adsClicked}, avgPlaybackRate: ${m.avgPlaybackRate}, contentWatched: ${m.contentWatched}`)
+        end sub
+
+        protected override function getPayloadData() as dynamic
+            payload = {}
+            payload[m.MSC_SESSION_ID] = m.id
+            payload[m.MSC_STARTED_AT] = m.startedAt
+            payload[m.MSC_PING_INTERVAL] = m.pingInterval
+            payload[m.MSC_TIME_PLAYED] = m.timePlayed
+            payload[m.MSC_TIME_PAUSED] = m.timePaused
+            payload[m.MSC_TIME_PLAYED_MUTED] = m.timePlayedMuted
+            payload[m.MSC_TIME_SPENT_ADS] = m.timeSpentAds
+            payload[m.MSC_TIME_BUFFERING] = m.timeBuffering
+            payload[m.MSC_ADS] = m.ads
+            payload[m.MSC_AD_BREAKS] = m.adBreaks
+            payload[m.MSC_ADS_SKIPPED] = m.adsSkipped
+            payload[m.MSC_CLICKED] = m.adsClicked
+            payload[m.MSC_AVG_PLAYBACK_RATE] = m.avgPlaybackRate
+            payload[m.MSC_CONTENT_WATCHED] = m.contentWatched
+            return payload
+        end function
+
+        protected override function getSchema() as string
+            return m.MSC_SCHEMA_MEDIA_SESSION
+        end function
+    end class
+end namespace
