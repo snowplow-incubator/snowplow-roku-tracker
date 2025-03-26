@@ -65,7 +65,10 @@ namespace Snowplow.Internal
         private lastPositionPing as dynamic
 
         private stats as object
+
+        private seeking as boolean
         private buffering as boolean
+        private ready as boolean
 
         private entities as object
 
@@ -78,10 +81,13 @@ namespace Snowplow.Internal
             m.media = data.media ?? data.video ?? data.audio
             m.id = data.id ?? options.id
             if m.id = invalid then m.id = CreateObject("roDeviceInfo").GetRandomUUID()
+
             m.entities = data.entities ?? data.context ?? []
             m.timer = CreateObject("roDateTime")
             m.startedAt = m.timer.ToISOString("milliseconds")
+            m.seeking = false
             m.buffering = false
+            m.ready = false
 
             if m.media = invalid
                 m.mediaType = invalid
@@ -171,7 +177,10 @@ namespace Snowplow.Internal
                 return m.getEventsForPositionChange(data, info)
             else if field = "control"
                 return m.getEventsForControlChange(data, info)
-            else if field = "duration" and m.captureEvent(MediaTrackingEvent.READY)
+            else if field = "trickPlayMode"
+                return m.getEventsForTrickPlayModeChange(data, info)
+            else if field = "duration" and m.captureEvent(MediaTrackingEvent.READY) and not m.ready
+                m.ready = true
                 return [m.createEvent(MediaTrackingEvent.READY, info)]
             else
                 return []
@@ -181,7 +190,9 @@ namespace Snowplow.Internal
         private function getEventsForStateChange(state, info) as dynamic
             events = []
 
-            if state = RokuMediaState.BUFFERING
+            if state = RokuMediaState.PAUSED and m.seeking
+                return events
+            else if state = RokuMediaState.BUFFERING
                 m.buffering = true
             else if m.buffering
                 if m.captureEvent(MediaTrackingEvent.BUFFER_START)
@@ -203,8 +214,24 @@ namespace Snowplow.Internal
             return [event]
         end function
 
+        private function getEventsForTrickPlayModeChange(trickPlayMode, info) as dynamic
+            if trickPlayMode <> "play" and trickPlayMode <> "pause" and not m.seeking
+                m.seeking = true
+                event = m.createEvent(MediaTrackingEvent.SEEK_START, info)
+                if m.captureEvent(MediaTrackingEvent.SEEK_START) then return [event]
+            else if trickPlayMode = "play" and m.seeking
+                m.seeking = false
+                event = m.createEvent(MediaTrackingEvent.SEEK_END, info)
+                if m.captureEvent(MediaTrackingEvent.SEEK_END) then return [event]
+            end if
+
+            return []
+        end function
+
         private function getEventsForPositionChange(position, info) as dynamic
             events = []
+
+            if m.seeking then return events
 
             percentageProgressEvent = m.getPercentageProgressEventForPositionChange(info)
             if percentageProgressEvent <> invalid then events.push(percentageProgressEvent)
@@ -376,6 +403,7 @@ namespace Snowplow.Internal
                 "position",
                 "state",
                 "streamInfo",
+                "trickPlayMode",
                 "timeToStartStreaming",
                 "videoFormat",
                 "width"
@@ -387,6 +415,7 @@ namespace Snowplow.Internal
                 "position",
                 "state",
                 "control",
+                "trickPlayMode",
                 "duration"
             ]
         end function
