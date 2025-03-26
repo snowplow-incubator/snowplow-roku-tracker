@@ -9,6 +9,8 @@
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
+import "pkg:/source/Snowplow/Internal/MediaAdContext.bs"
+import "pkg:/source/Snowplow/Internal/MediaAdBreakContext.bs"
 import "pkg:/source/Snowplow/Internal/MediaTracking.bs"
 import "pkg:/source/Snowplow/Internal/SelfDescribing.bs"
 import "pkg:/source/Snowplow/Internal/Subject.bs"
@@ -66,10 +68,41 @@ namespace Snowplow.Internal
         sub trackMediaEvent(data, port)
             media = data.media ?? data.video ?? data.audio
 
+            adContext = invalid
+            ad = data.ad
+            if ad <> invalid
+                adContext = new Snowplow.Internal.MediaAdContext()
+                adContext.adId = ad.adId
+                adContext.name = ad.name
+                adContext.creativeId = ad.creativeId
+                adContext.podPosition = ad.podPosition
+                adContext.duration = ad.duration
+                adContext.skippable = ad.skippable
+            end if
+
+            breakContext = invalid
+            adBreak = data.adBreak
+            if adBreak <> invalid
+                breakContext = new Snowplow.Internal.MediaAdBreakContext()
+                breakContext.breakId = adBreak.breakId
+                breakContext.name = adBreak.name
+                breakContext.startTime = adBreak.startTime
+                breakContext.breakType = adBreak.breakType
+                breakContext.podSize = adBreak.podSize
+            end if
+
             for each v in m.trackedMedia
                 if not media.isSameNode(v.media) then continue for
                 event = new Snowplow.Internal.SelfDescribing(data)
                 v.tracking.addContext(event, media)
+
+                if adContext <> invalid
+                    event.addContext(adContext)
+                end if
+                if breakContext <> invalid
+                    event.addContext(breakContext)
+                end if
+
                 m.trackEvent(event)
             end for
         end sub

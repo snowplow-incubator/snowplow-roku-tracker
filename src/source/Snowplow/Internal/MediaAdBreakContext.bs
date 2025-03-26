@@ -1,0 +1,50 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
+
+namespace Snowplow.Internal
+    class MediaAdBreakContext extends BaseEventContext
+        name as dynamic
+        breakId as string
+        startTime as float
+        breakType as dynamic
+        podSize as dynamic
+
+        ' parameters
+        private MABC_NAME = "name"
+        private MABC_BREAK_ID = "breakId"
+        private MABC_START_TIME = "startTime"
+        private MABC_BREAK_TYPE = "breakType"
+        private MABC_POD_SIZE = "podSize"
+
+        ' constants
+        private MAC_SCHEMA_MEDIA_AD_BREAK = "iglu:com.snowplowanalytics.snowplow.media/ad_break/jsonschema/1-0-0"
+
+        override sub describe(logger)
+            logger.debug(`Ad Break ID ${m.breakId}, Name: ${m.name}, startTime: ${m.startTime}, breakType: ${m.breakType}, podSize: ${m.podSize}`)
+        end sub
+
+        protected override function getPayloadData() as dynamic
+            payload = {}
+            payload[m.MABC_NAME] = m.name
+            payload[m.MABC_BREAK_ID] = m.breakId
+            payload[m.MABC_START_TIME] = m.startTime
+            payload[m.MABC_BREAK_TYPE] = m.breakType
+            payload[m.MABC_POD_SIZE] = m.podSize
+            return payload
+        end function
+
+        protected override function getSchema() as string
+            return m.MABC_SCHEMA_MEDIA_AD_BREAK
+        end function
+    end class
+end namespace
