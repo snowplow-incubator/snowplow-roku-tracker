@@ -9,6 +9,7 @@
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
+import "pkg:/source/Snowplow/Internal/ApplicationContextBuilder.bs"
 import "pkg:/source/Snowplow/Internal/DeviceInfoContextBuilder.bs"
 import "pkg:/source/Snowplow/Internal/ClientSessionContextBuilder.bs"
 
@@ -17,11 +18,13 @@ namespace Snowplow.Internal
         configuration as object
         deviceInfoContextBuilder as object
         sessionContextBuilder as object
+        applicationContextBuilder as object
 
         sub new(configuration as object)
             m.configuration = configuration
             m.deviceInfoContextBuilder = new Snowplow.Internal.DeviceInfoContextBuilder()
             m.sessionContextBuilder = new Snowplow.Internal.ClientSessionContextBuilder(configuration)
+            m.applicationContextBuilder = new Snowplow.Internal.ApplicationContextBuilder()
         end sub
 
         sub updateEvent(event as object)
@@ -45,6 +48,9 @@ namespace Snowplow.Internal
             m.sessionContextBuilder.updateState(event, m.configuration.sessionAsCookies)
             clientSessionContext = m.sessionContextBuilder.getContext(m.configuration)
             if clientSessionContext <> invalid then event.addContext(clientSessionContext)
+
+            applicationContext = m.applicationContextBuilder.getContext(m.configuration)
+            if applicationContext <> invalid then event.addContext(applicationContext)
         end sub
 
         private function getDomainSessionId() as dynamic

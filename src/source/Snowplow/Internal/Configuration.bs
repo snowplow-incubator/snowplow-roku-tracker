@@ -30,9 +30,12 @@ namespace Snowplow.Internal
         appId as string
         deviceContext = true
         sessionContext = true
+        applicationContext = false
+
         sessionAsCookies = false
         userAnonymous = false
         sessionAnonymous = false
+
         RIDATracking = true
 
         sub new(config)
@@ -52,12 +55,15 @@ namespace Snowplow.Internal
                 m.networkUserId = config.subject.networkUserId
                 m.userId = config.subject.userId
                 m.appId = config.subject.appId
+
                 m.deviceContext = config.subject.deviceContext ?? true
                 m.sessionContext = config.subject.sessionContext ?? true
+                m.applicationContext = config.subject.applicationContext ?? false
+                m.RIDATracking = config.subject.RIDATracking ?? true
+
                 m.sessionAsCookies = config.subject.sessionAsCookies ?? false
                 m.userAnonymous = config.subject.userAnonymous ?? false
-                m.sessionAnonymous = config.subject.sessionAnonymous ?? false
-                m.RIDATracking = config.subject.RIDATracking ?? true
+                m.serverAnonymous = config.subject.serverAnonymous ?? false
             end if
         end sub
     end class

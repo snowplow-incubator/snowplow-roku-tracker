@@ -1,0 +1,32 @@
+import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
+
+namespace Snowplow.Internal
+    class ApplicationContext extends BaseEventContext
+        version as string
+
+        ' parameters
+        private A_VERSION = "version"
+
+        ' constants
+        private A_SCHEMA = "iglu:com.snowplowanalytics.snowplow/application/jsonschema/1-0-0"
+
+        override sub describe(logger)
+            infos = [
+                `Version: ${m.version}`
+            ]
+            logger.debug(infos.join(", "))
+        end sub
+
+        protected override function getPayloadData() as dynamic
+            payload = {}
+
+            payload[m.A_VERSION] = m.version
+
+            return payload
+        end function
+
+        protected override function getSchema() as string
+            return m.A_SCHEMA
+        end function
+    end class
+end namespace
