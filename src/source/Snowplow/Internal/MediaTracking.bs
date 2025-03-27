@@ -177,6 +177,10 @@ namespace Snowplow.Internal
                 return m.getEventsForPositionChange(data, info)
             else if field = "control"
                 return m.getEventsForControlChange(data, info)
+            else if field = "mute"
+                return [m.createEvent(MediaTrackingEvent.VOLUME_CHANGE, info)]
+            else if field = "playbackSpeed"
+                return [m.createEvent(MediaTrackingEvent.PLAYBACK_RATE_CHANGE, info)]
             else if field = "trickPlayMode"
                 return m.getEventsForTrickPlayModeChange(data, info)
             else if field = "duration" and m.captureEvent(MediaTrackingEvent.READY) and not m.ready
@@ -290,11 +294,23 @@ namespace Snowplow.Internal
             else if eventType = MediaTrackingEvent.PICTURE_IN_PICTURE_CHANGE
                 payload.Append({})
             else if eventType = MediaTrackingEvent.PLAYBACK_RATE_CHANGE
-                payload.Append({})
+                payload.Append({
+                    "newRate": info.playbackSpeed
+                })
             else if eventType = MediaTrackingEvent.QUALITY_CHANGE
                 payload.Append({})
             else if eventType = MediaTrackingEvent.VOLUME_CHANGE
-                payload.Append({})
+                if info
+                    payload.Append({
+                        "previousVolume": 100,
+                        "newVolume": 0
+                    })
+                else
+                    payload.Append({
+                        "previousVolume": 0,
+                        "newVolume": 100
+                    })
+                end if
             end if
 
             return payload
@@ -414,6 +430,8 @@ namespace Snowplow.Internal
             return [
                 "position",
                 "state",
+                "mute",
+                "playbackSpeed",
                 "control",
                 "trickPlayMode",
                 "duration"
