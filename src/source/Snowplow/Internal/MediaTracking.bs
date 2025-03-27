@@ -23,6 +23,9 @@ namespace Snowplow.Internal
         PAUSED = "paused"
         PLAYING = "playing"
         BUFFERING = "buffering"
+        RESUME = "resume"
+        REPLAY = "replay"
+        SKIP_CONTENT = "skipcontent"
         NONE = "none"
     end enum
 
@@ -417,6 +420,12 @@ namespace Snowplow.Internal
                 return MediaTrackingEvent.BUFFER_START
             else if eventName = RokuMediaState.PLAYING
                 return MediaTrackingEvent.PLAY
+            else if eventName = RokuMediaState.REPLAY
+                return MediaTrackingEvent.PLAY
+            else if eventName = RokuMediaState.RESUME
+                return MediaTrackingEvent.PLAY
+            else if eventName = RokuMediaState.SKIP_CONTENT
+                return MediaTrackingEvent.END
             else if eventName = RokuMediaState.FINISHED
                 return MediaTrackingEvent.END
             else if eventName = RokuMediaState.PAUSED
