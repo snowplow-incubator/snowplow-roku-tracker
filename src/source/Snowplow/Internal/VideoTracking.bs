@@ -39,7 +39,7 @@ namespace Snowplow.Internal
             options = data.options ?? {}
 
             m.id = CreateObject("roDeviceInfo").GetRandomUUID()
-            m.video = data.video
+            m.video = data.media ?? data.video ?? data.audio
             m.label = options.label ?? data.label
             m.captureEvents = {}
             m.sentBoundaries = {}

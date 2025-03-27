@@ -199,9 +199,8 @@ namespace Snowplow.Internal
             else if state = RokuMediaState.BUFFERING
                 m.buffering = true
             else if m.buffering
-                if m.captureEvent(MediaTrackingEvent.BUFFER_START)
-                    events.push(m.createEvent(MediaTrackingEvent.BUFFER_END, info))
-                end if
+                event = m.createEvent(MediaTrackingEvent.BUFFER_END, info)
+                if m.captureEvent(MediaTrackingEvent.BUFFER_END) then events.push(event)
                 m.buffering = false
             end if
 
