@@ -1,0 +1,206 @@
+' Copyright (c) 2021 Snowplow Analytics Ltd. All rights reserved.
+'
+' This program is licensed to you under the Apache License Version 2.0,
+' and you may not use this file except in compliance with the Apache License Version 2.0.
+' You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+'
+' Unless required by applicable law or agreed to in writing,
+' software distributed under the Apache License Version 2.0 is distributed on an
+' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+
+import "pkg:/source/Snowplow/Internal/MediaPlayerEventV2.bs"
+import "pkg:/source/Snowplow/Internal/MediaPlayerContextV2.bs"
+import "pkg:/source/Snowplow/Internal/MediaSessionContext.bs"
+import "pkg:/source/Snowplow/Internal/RokuVideoContext.bs"
+
+namespace Snowplow.Internal
+    const UNSTRUCT_PAYLOAD_KEY = "ue_pr"
+    const MEDIA_EVENT_SCHEMA_PREFIX = "iglu:com.snowplowanalytics.snowplow.media"
+
+    class MediaSessionContextBuilder
+        private id as string
+        private pingInterval as integer
+        private startedAt as string
+
+        private timePlayed as float
+        private timePaused as float
+        private timePlayedMuted as float
+        private timeSpentAds as float
+        private timeBuffering as float
+        private contentWatched as integer
+        private ads as integer
+        private adBreaks as integer
+        private adsSkipped as integer
+        private adsClicked as integer
+
+        private amPaused as boolean
+        private amMuted as boolean
+        private playingAt as float
+        private playbackDurationWithPlaybackRate as float
+        private lastPosition as integer
+        private secondsSeen as object
+
+        private lastAdUpdate as object
+        private lastBufferingUpdate as object
+        private timer as object
+
+
+        sub new(id as dynamic, pingInterval as dynamic)
+            if id = invalid then id = CreateObject("roDeviceInfo").GetRandomUUID()
+            m.id = id
+            m.pingInterval = pingInterval ?? 30
+            m.startedAt = CreateObject("roDateTime").ToISOString("milliseconds")
+            m.timer = CreateObject("roTimeSpan")
+
+            m.amPaused = false
+            m.amMuted = false
+            m.playingAt = 1
+            m.lastPosition = 0
+            m.playbackDurationWithPlaybackRate = 0
+
+            m.timePlayed = 0
+            m.timePaused = 0
+            m.timePlayedMuted = 0
+            m.timeSpentAds = 0
+            m.timeBuffering = 0
+
+            m.ads = 0
+            m.adBreaks = 0
+            m.adsSkipped = 0
+            m.adsClicked = 0
+
+            m.contentWatched = 0
+
+            m.secondsSeen = {}
+        end sub
+
+        function getContext(event as object, player as object) as object
+            m.updateStats(event, player)
+
+            mediaSessionContext = new Snowplow.Internal.MediaSessionContext()
+
+            mediaSessionContext.id = m.id
+            mediaSessionContext.startedAt = m.startedAt
+            mediaSessionContext.pingInterval = m.pingInterval
+            mediaSessionContext.timePlayed = m.timePlayed
+            mediaSessionContext.timePaused = m.timePaused
+            mediaSessionContext.timePlayedMuted = m.timePlayedMuted
+            mediaSessionContext.timeSpentAds = m.timeSpentAds
+            mediaSessionContext.timeBuffering = m.timeBuffering
+            mediaSessionContext.ads = m.ads
+            mediaSessionContext.adBreaks = m.adBreaks
+            mediaSessionContext.adsSkipped = m.adsSkipped
+            mediaSessionContext.adsClicked = m.adsClicked
+            if m.playbackDurationWithPlaybackRate <> 0
+                mediaSessionContext.avgPlaybackRate = m.playbackDurationWithPlaybackRate / m.timePlayed
+            else
+                mediaSessionContext.avgPlaybackRate = 1
+            end if
+            mediaSessionContext.contentWatched = m.secondsSeen.Count()
+
+            return mediaSessionContext
+        end function
+
+        private sub updateStats(event as object, player as object)
+            name = m.getMediaEventType(event)
+            if name = invalid then return
+
+            m.updateDurationStats(name, player)
+            m.updateAdStats(name, player)
+            m.updateBufferingStats(name, player)
+        end sub
+
+        private function getMediaEventType(event as object) as dynamic
+            payload = event.preparePayloadToSend()
+            unstruct = payload[UNSTRUCT_PAYLOAD_KEY]
+
+            if unstruct = invalid then return invalid
+
+            schema = ParseJson(unstruct).data.schema.split("/")
+            vendor = schema[0]
+            name = schema[1]
+
+            if vendor <> MEDIA_EVENT_SCHEMA_PREFIX then return invalid
+
+            return name.replace("_event", "")
+        end function
+
+        private sub updateDurationStats(event as string, player as object)
+            if m.lastAdUpdate <> invalid then return
+
+            duration = m.timer.TotalMilliseconds() / 1000
+
+            if m.amPaused
+                m.timePaused += duration
+            else
+                m.timePlayed += duration
+                m.playbackDurationWithPlaybackRate += duration * m.playingAt
+
+                if m.amMuted
+                    m.timePlayedMuted += duration
+                end if
+
+                if player.currentTime > m.lastPosition
+                    for x = m.lastPosition to Fix(player.currentTime)
+                        m.secondsSeen[x.ToStr()] = true
+                    end for
+                end if
+            endif
+
+            if event <> MediaTrackingEvent.PAUSE
+                m.secondsSeen[Fix(player.currentTime).ToStr()] = true
+            end if
+
+            m.timer.Mark()
+            m.amPaused = player.paused
+            m.amMuted = player.muted
+            m.playingAt = player.playbackRate
+            m.lastPosition = Fix(player.currentTime)
+        end sub
+
+        private sub updateAdStats(event as string, player as object)
+            if event = MediaTrackingEvent.AD_BREAK_START
+                m.adBreaks += 1
+            else if event = MediaTrackingEvent.AD_CLICK
+                m.adsClicked += 1
+            else if event = MediaTrackingEvent.AD_SKIP
+                m.adsSkipped += 1
+            else if event = MediaTrackingEvent.AD_START
+                m.ads += 1
+            end if
+
+            if event = MediaTrackingEvent.AD_START or event = MediaTrackingEvent.AD_RESUME
+                if m.lastAdUpdate = invalid then m.lastAdUpdate = CreateObject("roTimeSpan")
+            else if event = MediaTrackingEvent.AD_CLICK or event = MediaTrackingEvent.AD_QUARTILE
+                if m.lastAdUpdate <> invalid
+                    m.timeSpentAds += m.lastAdUpdate.TotalMilliseconds() / 1000
+                    m.lastAdUpdate.Mark()
+                else
+                    m.lastAdUpdate = CreateObject("roTimeSpan")
+                end if
+            else if event = MediaTrackingEvent.AD_COMPLETE or event = MediaTrackingEvent.AD_SKIP or event = MediaTrackingEvent.AD_PAUSE
+                if m.lastAdUpdate <> invalid
+                    m.timeSpentAds += m.lastAdUpdate.TotalMilliseconds() / 1000
+                    m.lastAdUpdate = invalid
+                else
+                    m.lastAdUpdate = invalid
+                end if
+            end if
+        end sub
+
+        private sub updateBufferingStats(event as string, player as object)
+            if event = MediaTrackingEvent.BUFFER_START
+                m.lastBufferingUpdate = CreateObject("roTimeSpan")
+            else if m.lastBufferingUpdate <> invalid
+                m.timeBuffering += m.lastBufferingUpdate.TotalMilliseconds() / 1000
+                if event = MediaTrackingEvent.BUFFER_END or event = MediaTrackingEvent.PLAY
+                    m.lastBufferingUpdate = invalid
+                else
+                    m.lastBufferingUpdate.Mark()
+                end if
+            end if
+        end sub
+
+    end class
+end namespace

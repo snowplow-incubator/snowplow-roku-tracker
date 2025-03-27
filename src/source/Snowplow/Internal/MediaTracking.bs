@@ -11,13 +11,10 @@
 
 import "pkg:/source/Snowplow/Internal/MediaPlayerEventV2.bs"
 import "pkg:/source/Snowplow/Internal/MediaPlayerContextV2.bs"
-import "pkg:/source/Snowplow/Internal/MediaSessionContext.bs"
+import "pkg:/source/Snowplow/Internal/MediaSessionContextBuilder.bs"
 import "pkg:/source/Snowplow/Internal/RokuVideoContext.bs"
 
 namespace Snowplow.Internal
-    const UNSTRUCT_PAYLOAD_KEY = "ue_pr"
-    const MEDIA_EVENT_SCHEMA_PREFIX = "iglu:com.snowplowanalytics.snowplow.media/"
-
     enum RokuMediaState
         ERROR = "error"
         FINISHED = "finished"
@@ -48,6 +45,16 @@ namespace Snowplow.Internal
         PLAYBACK_RATE_CHANGE = "playback_rate_change"
         QUALITY_CHANGE = "quality_change"
         VOLUME_CHANGE = "volume_change"
+
+        AD_BREAK_START = "ad_break_start"
+        AD_BREAK_END = "ad_break_end"
+        AD_CLICK = "ad_click"
+        AD_COMPLETE = "ad_complete"
+        AD_PAUSE = "ad_pause"
+        AD_QUARTILE = "ad_quartile"
+        AD_RESUME = "ad_resume"
+        AD_SKIP = "ad_skip"
+        AD_START = "ad_start"
     end enum
 
     class MediaTracking
@@ -56,7 +63,6 @@ namespace Snowplow.Internal
 
         private label as dynamic
         private mediaType as dynamic
-        private startedAt as string
 
         private captureEvents as object
         private sentBoundaries as object
@@ -79,12 +85,12 @@ namespace Snowplow.Internal
             options = data.options ?? {}
 
             m.media = data.media ?? data.video ?? data.audio
+
             m.id = data.id ?? options.id
             if m.id = invalid then m.id = CreateObject("roDeviceInfo").GetRandomUUID()
 
             m.entities = data.entities ?? data.context ?? []
-            m.timer = CreateObject("roDateTime")
-            m.startedAt = m.timer.ToISOString("milliseconds")
+
             m.seeking = false
             m.buffering = false
             m.ready = false
@@ -107,24 +113,8 @@ namespace Snowplow.Internal
                 m.lastPositionPing = 0
             end if
 
-            sessions = data.sessions ?? true
-
-            if sessions
-                m.stats = {
-                    timePlayed: 0,
-                    timePaused: 0,
-                    timePlayedMuted: 0,
-                    timeSpentAds: 0,
-                    timeBuffering: 0,
-                    ads: 0,
-                    adBreaks: 0,
-                    adsSkipped: 0,
-                    adsClicked: 0,
-                    avgPlaybackRate: 0,
-                    contentWatched: 0
-                }
-            else
-                m.stats = invalid
+            if data.sessions ?? true
+                m.stats = new Snowplow.Internal.MediaSessionContextBuilder(m.id, m.pingInterval)
             end if
 
 
@@ -204,16 +194,16 @@ namespace Snowplow.Internal
                 m.buffering = false
             end if
 
-            if not m.captureEvent(state) then return events
+            event = m.createEvent(m.translateEvent(state), info)
 
-            events.push(m.createEvent(m.translateEvent(state), info))
+            if m.captureEvent(m.translateEvent(state)) then events.push(event)
+
             return events
         end function
 
         private function getEventsForControlChange(control, info) as dynamic
-            if not m.captureEvent(control) then return []
-
             event = m.createEvent(m.translateEvent(control), info)
+            if not m.captureEvent(control) then return []
             return [event]
         end function
 
@@ -326,7 +316,7 @@ namespace Snowplow.Internal
             mediaPlayerContext.loop = info.loop ?? false
             mediaPlayerContext.mediaType = m.mediaType
             mediaPlayerContext.muted = info.mute ?? false
-            mediaPlayerContext.paused = info.state = "paused"
+            mediaPlayerContext.paused = info.state <> RokuMediaState.PLAYING
             mediaPlayerContext.pictureInPicture = invalid
             mediaPlayerContext.playbackRate = info.playbackSpeed ?? 1
             mediaPlayerContext.playerType = `com.roku-${m.mediaType}`
@@ -334,23 +324,8 @@ namespace Snowplow.Internal
             mediaPlayerContext.volume = 100
             event.addContext(mediaPlayerContext)
 
-            if not m.stats = invalid
-                m.updateStats(event, info)
-                mediaSessionContext = new Snowplow.Internal.MediaSessionContext()
-                mediaSessionContext.id = m.id
-                mediaSessionContext.startedAt = m.startedAt
-                mediaSessionContext.pingInterval = m.pingInterval
-                mediaSessionContext.timePlayed = m.stats.timePlayed
-                mediaSessionContext.timePaused = m.stats.timePaused
-                mediaSessionContext.timePlayedMuted = m.stats.timePlayedMuted
-                mediaSessionContext.timeSpentAds = m.stats.timeSpentAds
-                mediaSessionContext.timeBuffering = m.stats.timeBuffering
-                mediaSessionContext.ads = m.stats.ads
-                mediaSessionContext.adBreaks = m.stats.adBreaks
-                mediaSessionContext.adsSkipped = m.stats.adsSkipped
-                mediaSessionContext.adsClicked = m.stats.adsClicked
-                mediaSessionContext.avgPlaybackRate = m.stats.avgPlaybackRate
-                mediaSessionContext.contentWatched = m.stats.contentWatched
+            if m.stats <> invalid
+                mediaSessionContext = m.stats.getContext(event, mediaPlayerContext)
                 event.addContext(mediaSessionContext)
             end if
 
@@ -376,31 +351,6 @@ namespace Snowplow.Internal
             for each e in m.entities
                 event.addContext(e)
             end for
-        end sub
-
-        private sub updateStats(event as object, info as object)
-            payload = event.preparePayloadToSend()
-            unstruct = payload[UNSTRUCT_PAYLOAD_KEY]
-
-            if unstruct = invalid then return
-
-            schema = ParseJson(unstruct).data.schema
-
-            if Instr(1, schema, MEDIA_EVENT_SCHEMA_PREFIX) = 0 then return
-
-            m.stats = {
-                timePlayed: 0,
-                timePaused: 0,
-                timePlayedMuted: 0,
-                timeSpentAds: 0,
-                timeBuffering: 0,
-                ads: 0,
-                adBreaks: 0,
-                adsSkipped: 0,
-                adsClicked: 0,
-                avgPlaybackRate: 0,
-                contentWatched: 0
-            }
         end sub
 
         private function getInfoFields() as object
