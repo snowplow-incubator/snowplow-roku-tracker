@@ -105,6 +105,7 @@ namespace Snowplow.Internal
 
         function getContext(configuration as object) as dynamic
             if not configuration.sessionContext then return invalid
+            m.registry.flush()
             return m.context
         end function
 
