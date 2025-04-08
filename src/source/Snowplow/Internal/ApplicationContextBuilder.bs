@@ -20,13 +20,9 @@ namespace Snowplow.Internal
 
             m.context = new Snowplow.Internal.ApplicationContext()
 
-            version = appInfo.GetVersion()
+            m.context.version = appInfo.GetVersion()
 
-            if appInfo.IsDev()
-                m.context.version = `${version}-dev`
-            else
-                m.context.version = version
-            end if
+            if appInfo.IsDev() then m.context.build = "dev" else m.context.build = "prod"
         end sub
 
         function getContext(configuration as object) as dynamic

@@ -3,16 +3,18 @@ import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
 namespace Snowplow.Internal
     class ApplicationContext extends BaseEventContext
         version as string
+        build as string
 
         ' parameters
         private A_VERSION = "version"
+        private A_BUILD = "build"
 
         ' constants
-        private A_SCHEMA = "iglu:com.snowplowanalytics.snowplow/application/jsonschema/1-0-0"
+        private A_SCHEMA = "iglu:com.snowplowanalytics.mobile/application/jsonschema/1-0-0"
 
         override sub describe(logger)
             infos = [
-                `Version: ${m.version}`
+                `Version: ${m.version}, Build: ${m.build}`
             ]
             logger.debug(infos.join(", "))
         end sub
@@ -21,6 +23,7 @@ namespace Snowplow.Internal
             payload = {}
 
             payload[m.A_VERSION] = m.version
+            payload[m.A_BUILD] = m.build
 
             return payload
         end function
