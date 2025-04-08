@@ -1,0 +1,51 @@
+import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
+
+namespace Snowplow.Internal
+    class ScreenContext extends BaseEventContext
+        name as string
+        id as string
+        type as dynamic
+        viewController as dynamic
+        topViewController as dynamic
+        activity as dynamic
+        fragment as dynamic
+
+        ' parameters
+        private S_NAME = "name"
+        private S_ID = "id"
+        private S_TYPE = "type"
+        private S_VIEW_CONTROLLER = "viewController"
+        private S_TOP_VIEW_CONTROLLER = "topViewController"
+        private S_ACTIVITY = "activity"
+        private S_FRAGMENT = "fragment"
+
+        ' constants
+        private S_SCHEMA = "iglu:com.snowplowanalytics.mobile/screen/jsonschema/1-0-0"
+
+        override sub describe(logger)
+            infos = [
+                `Name: ${m.name}, ID: ${m.id}, Type: ${m.type}, VC: ${m.viewController}, TVC: ${m.topViewController}, Activity: ${m.activity}, Fragment: ${m.fragment}`
+            ]
+            logger.debug(infos.join(", "))
+        end sub
+
+        protected override function getPayloadData() as dynamic
+            payload = {}
+
+            payload[m.S_NAME] = m.name
+            payload[m.S_ID] = m.id
+
+            if m.type <> invalid then payload[m.S_TYPE] = m.type
+            if m.viewController <> invalid then payload[m.S_VIEW_CONTROLLER] = m.viewController
+            if m.topViewController <> invalid then payload[m.S_TOP_VIEW_CONTROLLER] = m.topViewController
+            if m.activity <> invalid then payload[m.S_ACTIVITY] = m.activity
+            if m.fragment <> invalid then payload[m.S_FRAGMENT] = m.fragment
+
+            return payload
+        end function
+
+        protected override function getSchema() as string
+            return m.S_SCHEMA
+        end function
+    end class
+end namespace

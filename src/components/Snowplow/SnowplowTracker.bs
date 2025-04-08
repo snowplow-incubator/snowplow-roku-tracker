@@ -97,7 +97,13 @@ end sub
 ' Tracks a screen view event
 ' @param {assocarray} data Event properties
 sub trackScreenView(data)
-    event = new Snowplow.Internal.ScreenView(data)
+    event = invalid
+    if m.tracker <> invalid
+        event = new Snowplow.Internal.ScreenView(data, m.tracker.prevScreen)
+        m.tracker.prevScreen = event
+    else
+        event = new Snowplow.Internal.ScreenView(data, invalid)
+    end if
     trackEvent(event)
 end sub
 

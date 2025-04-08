@@ -12,6 +12,7 @@
 import "pkg:/source/Snowplow/Internal/MediaAdContext.bs"
 import "pkg:/source/Snowplow/Internal/MediaAdBreakContext.bs"
 import "pkg:/source/Snowplow/Internal/MediaTracking.bs"
+import "pkg:/source/Snowplow/Internal/ScreenContext.bs"
 import "pkg:/source/Snowplow/Internal/SelfDescribing.bs"
 import "pkg:/source/Snowplow/Internal/Subject.bs"
 
@@ -23,17 +24,30 @@ namespace Snowplow.Internal
         emitter as Object
         subject as Object
         trackedVideos as Object
+        prevScreen as Object
 
         sub new(configuration as Object, emitter as Object)
             m.configuration = configuration
             m.emitter = emitter
             m.subject = new Snowplow.Internal.Subject(configuration)
             m.trackedMedia = []
+            m.prevScreen = invalid
             m.log = new log.Logger("Snowplow")
         end sub
 
         sub trackEvent(event as Object)
             m.subject.updateEvent(event)
+
+            if m.prevScreen <> invalid
+                screen = new Snowplow.Internal.ScreenContext()
+
+                screen.id = m.prevScreen.id
+                screen.name = m.prevScreen.name
+                screen.type = m.prevScreen.type
+
+                event.addContext(screen)
+            end if
+
             event.describe(m.log)
             m.emitter.add(event)
         end sub
