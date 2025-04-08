@@ -63,6 +63,7 @@ namespace Snowplow.Internal
     class MediaTracking
         private id as string
         private media as object
+        private includeRokuVideo as boolean
 
         private label as dynamic
         private mediaType as dynamic
@@ -93,6 +94,7 @@ namespace Snowplow.Internal
             if m.id = invalid then m.id = CreateObject("roDeviceInfo").GetRandomUUID()
 
             m.entities = data.entities ?? data.context ?? []
+            m.includeRokuVideo = data.rokuVideoContext ?? options.rokuVideoContext ?? true
 
             m.seeking = false
             m.buffering = false
@@ -332,24 +334,26 @@ namespace Snowplow.Internal
                 event.addContext(mediaSessionContext)
             end if
 
-            rokuVideoContext = new Snowplow.Internal.RokuVideoContext()
-            rokuVideoContext.videoId = m.id
-            rokuVideoContext.contentId = m.getContentId(info)
-            rokuVideoContext.contentTitle = m.getContentTitle(info)
-            rokuVideoContext.contentUrl = m.getContentUrl(info)
-            rokuVideoContext.contentType = m.getContentType(info)
-            rokuVideoContext.streamFormat = m.getStreamFormat(info)
-            rokuVideoContext.streamUrl = m.getStreamUrl(info)
-            rokuVideoContext.videoFormat = m.getMediaFormat(info)
-            rokuVideoContext.isUnderrun = m.isUnderrun(info)
-            rokuVideoContext.isResumed = m.isResumed(info)
-            rokuVideoContext.measuredBitrate = m.getMeasuredBitrate(info)
-            rokuVideoContext.streamBitrate = m.getStreamBitrate(info)
-            rokuVideoContext.timeToStartStreaming = info.timeToStartStreaming
-            rokuVideoContext.width = info.width
-            rokuVideoContext.height = info.height
-            rokuVideoContext.errorStr = m.getErrorStr(info)
-            event.addContext(rokuVideoContext)
+            if m.includeRokuVideo
+                rokuVideoContext = new Snowplow.Internal.RokuVideoContext()
+                rokuVideoContext.videoId = m.id
+                rokuVideoContext.contentId = m.getContentId(info)
+                rokuVideoContext.contentTitle = m.getContentTitle(info)
+                rokuVideoContext.contentUrl = m.getContentUrl(info)
+                rokuVideoContext.contentType = m.getContentType(info)
+                rokuVideoContext.streamFormat = m.getStreamFormat(info)
+                rokuVideoContext.streamUrl = m.getStreamUrl(info)
+                rokuVideoContext.videoFormat = m.getMediaFormat(info)
+                rokuVideoContext.isUnderrun = m.isUnderrun(info)
+                rokuVideoContext.isResumed = m.isResumed(info)
+                rokuVideoContext.measuredBitrate = m.getMeasuredBitrate(info)
+                rokuVideoContext.streamBitrate = m.getStreamBitrate(info)
+                rokuVideoContext.timeToStartStreaming = info.timeToStartStreaming
+                rokuVideoContext.width = info.width
+                rokuVideoContext.height = info.height
+                rokuVideoContext.errorStr = m.getErrorStr(info)
+                event.addContext(rokuVideoContext)
+            end if
 
             for each e in m.entities
                 event.addContext(e)
