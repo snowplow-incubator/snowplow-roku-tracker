@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-node@master
         with:
-          node-version: 14
+          node-version: lts/*
       - run: npm ci
       - run: npm i ropm -g
       - run: ropm install
@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-node@master
         with:
-          node-version: 14
+          node-version: lts/*
       - run: npm ci
       - run: npm i ropm -g
       - run: ropm install
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-node@master
         with:
-          node-version: 14
+          node-version: lts/*
       - run: npm ci
       - run: npm i ropm -g
       - run: ropm install
@@ -54,7 +54,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-node@master
         with:
-          node-version: 14
+          node-version: lts/*
       - run: npm ci
       - run: npm i ropm -g
       - run: ropm install
