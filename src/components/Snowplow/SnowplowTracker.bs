@@ -69,7 +69,7 @@ sub runLoop()
                 else if field = "disableAudioTracking" or field = "disableMediaTracking" or field = "disableVideoTracking"
                     stopTrackingMedia(data)
                 else if field = "customAudioEvent" or field = "customMediaEvent" or field = "customVideoEvent"
-                    stopTrackingMedia(data)
+                    trackMediaEvent(data)
                 else if node.isSubtype("Video") or node.isSubtype("Audio")
                     info = msg.getInfo()
                     trackMediaEvents(field, node, info, data)
