@@ -71,8 +71,8 @@ namespace Snowplow.Internal
         private captureEvents as object
         private sentBoundaries as object
         private pingInterval as dynamic
-        private maxPausedPings as dynamic
         private lastPositionPing as dynamic
+        private lastQuality as dynamic
 
         private stats as object
 
@@ -114,7 +114,6 @@ namespace Snowplow.Internal
 
             if pings
                 m.pingInterval = data.pingInterval ?? options.positionInterval ?? 30
-                m.maxPausedPings = data.maxPausedPings ?? 1
                 m.lastPositionPing = 0
             end if
 
@@ -178,6 +177,8 @@ namespace Snowplow.Internal
                 return [m.createEvent(MediaTrackingEvent.PLAYBACK_RATE_CHANGE, info)]
             else if field = "trickPlayMode"
                 return m.getEventsForTrickPlayModeChange(data, info)
+            else if field = "streamingSegment"
+                return m.getEventsForQualityChange(data, info)
             else if field = "duration" and m.captureEvent(MediaTrackingEvent.READY) and not m.ready
                 m.ready = true
                 return [m.createEvent(MediaTrackingEvent.READY, info)]
@@ -265,6 +266,20 @@ namespace Snowplow.Internal
             return invalid
         end function
 
+        private function getEventsForQualityChange(streamSegmentInfo, info) as dynamic
+            if not m.captureEvent(MediaTrackingEvent.QUALITY_CHANGE)
+                return []
+            else if m.lastQuality = invalid
+                m.lastQuality = streamSegmentInfo.segBitrateBps
+            else if m.lastQuality <> streamSegmentInfo.segBitrateBps
+                event = m.createEvent(MediaTrackingEvent.QUALITY_CHANGE, info)
+                m.lastQuality = streamSegmentInfo.segBitrateBps
+                return [event]
+            end if
+
+            return []
+        end function
+
         private function createEvent(eventType as string, info as object) as object
             payload = m.extractPayload(eventType, info, m.getPercentProgress(info))
             event = new Snowplow.Internal.MediaPlayerEventV2(eventType, payload)
@@ -292,7 +307,12 @@ namespace Snowplow.Internal
                     "newRate": info.playbackSpeed
                 })
             else if eventType = MediaTrackingEvent.QUALITY_CHANGE
-                payload.Append({})
+                payload.Append({
+                    previousQuality: m.lastQuality.ToStr(),
+                    newQuality: info.streamingSegment.segBitrateBps.ToStr(),
+                    bitrate: info.streamingSegment.segBitrateBps,
+                    automatic: true
+                })
             else if eventType = MediaTrackingEvent.VOLUME_CHANGE
                 if info
                     payload.Append({
@@ -375,6 +395,7 @@ namespace Snowplow.Internal
                 "position",
                 "state",
                 "streamInfo",
+                "streamingSegment",
                 "trickPlayMode",
                 "timeToStartStreaming",
                 "videoFormat",
@@ -390,6 +411,7 @@ namespace Snowplow.Internal
                 "playbackSpeed",
                 "control",
                 "trickPlayMode",
+                "streamingSegment",
                 "duration"
             ]
         end function
