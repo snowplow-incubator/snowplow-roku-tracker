@@ -28,9 +28,9 @@ sub init()
     m.top.ObserveField("disableAudioTracking", "stopTrackingMedia")
     m.top.ObserveField("disableMediaTracking", "stopTrackingMedia")
     m.top.ObserveField("disableVideoTracking", "stopTrackingMedia")
-    m.top.ObserveField("customAudioEvent", "stopTrackingMedia")
-    m.top.ObserveField("customMediaEvent", "stopTrackingMedia")
-    m.top.ObserveField("customVideoEvent", "stopTrackingMedia")
+    m.top.ObserveField("trackAudioEvent", "trackMediaEvent")
+    m.top.ObserveField("trackMediaEvent", "trackMediaEvent")
+    m.top.ObserveField("trackVideoEvent", "trackMediaEvent")
 
     m.trackerNamespaces = []
 end sub

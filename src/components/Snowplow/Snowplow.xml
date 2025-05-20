@@ -57,10 +57,10 @@ m.global.snowplow.structured = {
         <!-- end tracking of Video node on all initialized trackers -->
         <field id="disableVideoTracking" type="assocarray" />
         <!-- track a self-describing event using all initialized trackers, including media entities -->
-        <field id="customAudioEvent" type="assocarray" />
+        <field id="trackAudioEvent" type="assocarray" />
         <!-- track a self-describing event using all initialized trackers, including media entities -->
-        <field id="customMediaEvent" type="assocarray" />
+        <field id="trackMediaEvent" type="assocarray" />
         <!-- track a self-describing event using all initialized trackers, including media entities -->
-        <field id="customVideoEvent" type="assocarray" />
+        <field id="trackVideoEvent" type="assocarray" />
     </interface>
 </component>

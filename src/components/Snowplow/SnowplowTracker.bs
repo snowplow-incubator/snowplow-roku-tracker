@@ -36,9 +36,9 @@ sub init()
     m.top.ObserveField("disableAudioTracking", m.port)
     m.top.ObserveField("disableMediaTracking", m.port)
     m.top.ObserveField("disableVideoTracking", m.port)
-    m.top.ObserveField("customAudioEvent", m.port)
-    m.top.ObserveField("customMediaEvent", m.port)
-    m.top.ObserveField("customVideoEvent", m.port)
+    m.top.ObserveField("trackAudioEvent", m.port)
+    m.top.ObserveField("trackMediaEvent", m.port)
+    m.top.ObserveField("trackVideoEvent", m.port)
 
     m.top.functionName = "runLoop"
     m.top.control = "RUN"
@@ -68,7 +68,7 @@ sub runLoop()
                     trackMedia(data)
                 else if field = "disableAudioTracking" or field = "disableMediaTracking" or field = "disableVideoTracking"
                     stopTrackingMedia(data)
-                else if field = "customAudioEvent" or field = "customMediaEvent" or field = "customVideoEvent"
+                else if field = "trackAudioEvent" or field = "trackMediaEvent" or field = "trackVideoEvent"
                     trackMediaEvent(data)
                 else if node.isSubtype("Video") or node.isSubtype("Audio")
                     info = msg.getInfo()
