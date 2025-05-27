@@ -64,9 +64,17 @@ sub runLoop()
                     trackSelfDescribing(data)
                 else if field = "structured"
                     trackStructured(data)
-                else if field = "enableAudioTracking" or field = "enableMediaTracking" or field = "enableVideoTracking"
+                else if field = "enableMediaTracking"
+                    data.version = data.version ?? 2
                     trackMedia(data)
-                else if field = "disableAudioTracking" or field = "disableMediaTracking" or field = "disableVideoTracking"
+                else if field = "enableAudioTracking" or field = "enableVideoTracking"
+                    data.version = data.version ?? 1
+                    trackMedia(data)
+                else if field = "disableMediaTracking"
+                    data.version = data.version ?? 2
+                    stopTrackingMedia(data)
+                else if field = "disableAudioTracking" or field = "disableVideoTracking"
+                    data.version = data.version ?? 1
                     stopTrackingMedia(data)
                 else if field = "trackAudioEvent" or field = "trackMediaEvent" or field = "trackVideoEvent"
                     trackMediaEvent(data)
