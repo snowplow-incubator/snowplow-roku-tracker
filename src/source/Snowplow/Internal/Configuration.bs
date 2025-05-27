@@ -63,6 +63,7 @@ namespace Snowplow.Internal
 
                 m.sessionAsCookies = config.subject.sessionAsCookies ?? false
                 m.userAnonymous = config.subject.userAnonymous ?? false
+                m.sessionAnonymous = config.subject.sessionAnonymous ?? false
                 m.serverAnonymous = config.subject.serverAnonymous ?? false
             end if
         end sub

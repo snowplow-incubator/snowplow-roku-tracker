@@ -45,7 +45,7 @@ namespace Snowplow.Internal
             deviceInfoContext = m.deviceInfoContextBuilder.getContext(m.configuration)
             if deviceInfoContext <> invalid then event.addContext(deviceInfoContext)
 
-            m.sessionContextBuilder.updateState(event, m.configuration.sessionAsCookies)
+            m.sessionContextBuilder.updateState(event, m.configuration.sessionAsCookies, m.configuration.userAnonymous, m.configuration.sessionAnonymous)
             clientSessionContext = m.sessionContextBuilder.getContext(m.configuration)
             if clientSessionContext <> invalid then event.addContext(clientSessionContext)
 
