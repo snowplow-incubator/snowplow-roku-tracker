@@ -33,15 +33,31 @@ namespace Snowplow.Internal
         ' constants
         private SV_SCHEMA_SCREEN_VIEW = "iglu:com.snowplowanalytics.mobile/screen_view/jsonschema/1-0-0"
 
-        sub new(data as object)
+        sub new(data as object, prev = invalid as object)
             super(data)
 
             m.id = data[m.SV_ID]
             m.name = data[m.SV_NAME]
             m.viewType = data[m.SV_TYPE]
-            if data[m.SV_PREVIOUS_ID] <> invalid then m.previousId = data[m.SV_PREVIOUS_ID]
-            if data[m.SV_PREVIOUS_NAME] <> invalid then m.previousName = data[m.SV_PREVIOUS_NAME]
-            if data[m.SV_PREVIOUS_TYPE] <> invalid then m.previousType = data[m.SV_PREVIOUS_TYPE]
+
+            if data[m.SV_PREVIOUS_ID] <> invalid
+                m.previousId = data[m.SV_PREVIOUS_ID]
+            else if prev <> invalid
+                m.previousId = prev.id
+            end if
+
+            if data[m.SV_PREVIOUS_NAME] <> invalid
+                m.previousName = data[m.SV_PREVIOUS_NAME]
+            else if prev <> invalid
+                m.previousName = prev.name
+            end if
+
+            if data[m.SV_PREVIOUS_TYPE] <> invalid
+                m.previousType = data[m.SV_PREVIOUS_TYPE]
+            else if prev <> invalid
+                m.previousType = prev.viewType
+            end if
+
             if data[m.SV_TRANSITION_TYPE] <> invalid then m.transitionType = data[m.SV_TRANSITION_TYPE]
         end sub
 

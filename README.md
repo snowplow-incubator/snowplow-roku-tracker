@@ -81,7 +81,7 @@ To track events, simply assign their properties as associative arrays to fields 
 Events will be sent to all initialized trackers (with any namespace) when setting the event types on the Snowplow instance.
 To send events to a specific tracker, call its namespace as follows: `m.global.snowplow.trackerNamespace.structured = {...}`.
 The following are some examples of the tracked events.
-Please refer to the documentation for specificiation of event properties.
+Please refer to the documentation for specification of event properties.
 
 ```brs
 ' Tracking a screen view event using all initialized trackers
@@ -160,7 +160,7 @@ m.global.snowplow.enableVideoTracking = {
 
 ### Maintainer Quick Start
 
-Assuming git, Node.js 12 LTS or 16 LTS are installed.
+Assuming git, Node.js 16 LTS or newer are installed.
 
 The tracker is implemented using [BrighterScript](https://github.com/rokucommunity/brighterscript).
 
@@ -175,10 +175,9 @@ git clone https://github.com/snowplow-incubator/snowplow-roku-tracker.git
 To build the package in order to include it in other Roku projects:
 
 1. Run `npm install` on the project
-2. Install ropm `npm i ropm -g`
-3. Install ropm packages `ropm install`
-4. Run `npm run build`
-5. The package source files will be placed in the `dist` folder and may be copied for use in another Roku project
+2. Install ropm packages `npx --yes ropm install`
+3. Run `npm run build`
+4. The package source files will be placed in the `dist` folder and may be copied for use in another Roku project
 
 ## Demo App
 
@@ -189,23 +188,22 @@ The project is located in the `src-demo-app` subfolder.
 The following steps assume that you have enabled developer mode on your Roku device and it is connected to your network.
 
 1. Run `npm install` on the project
-2. Install ropm `npm i ropm -g`
-3. Install ropm packages `ropm install`
-4. Create `.env` file with environment variables in the root of this repository
+2. Install ropm packages `npx --yes ropm install`
+3. Create `.env` file with environment variables in the root of this repository
 
     ```bash
     ROKU_IP=192.168.100.129
     ROKU_PASSWORD=XXXX
     ```
 
-5. Add configuration for Snowplow collector to `src-demo-app/manifest`
+4. Add configuration for Snowplow collector to `src-demo-app/manifest`
 
     ```bash
     snowplow_collector=http://192.168.100.127:9090
     snowplow_method=POST
     ```
 
-6. Start the demo app using `npm run demo-app`
+5. Start the demo app using `npm run demo-app`
 
 Alternatively, you may run the demo app from Visual Studio Code as the debug configuration is already prepared.
 Install the BrightScript extension to Visual Studio Code and choose "Run demo app" in the debug options.
@@ -222,24 +220,23 @@ The tests are located in the `tests` subfolder.
 The following steps assume that you have enabled developer mode on your Roku device and it is connected to your network.
 
 1. Run `npm install` on the project
-2. Install ropm `npm i ropm -g`
-3. Install ropm packages `ropm install`
-4. Create `.env` file with environment variables in the root of this repository
+2. Install ropm packages `npx --yes ropm install`
+3. Create `.env` file with environment variables in the root of this repository
 
     ```bash
     ROKU_IP=192.168.100.129
     ROKU_PASSWORD=XXXX
     ```
 
-5. Start [Snowplow Micro](https://github.com/snowplow-incubator/snowplow-micro) on your computer
-6. Add configuration for your Snowplow Micro (with the network IP of your computer) instance to `tests/manifest`
+4. Start [Snowplow Micro](https://github.com/snowplow-incubator/snowplow-micro) on your computer
+5. Add configuration for your Snowplow Micro (with the network IP of your computer) instance to `tests/manifest`
 
     ```bash
     snowplow_collector=http://192.168.100.127:9090
     snowplow_method=POST
     ```
 
-7. Run the tests using `npm test`
+6. Run the tests using `npm test`
 
 Alternatively, you may run the tests from Visual Studio Code as the debug configuration is already prepared.
 Install the BrightScript extension to Visual Studio Code and choose "Run tests" in the debug options.
@@ -257,10 +254,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-[website]: https://snowplowanalytics.com
+[website]: https://snowplow.io
 [snowplow]: https://github.com/snowplow/snowplow
-[docs]: https://docs.snowplowanalytics.com/
-[roku-docs]: https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/roku-tracker/
+[docs]: https://docs.snowplow.io/
+[roku-docs]: https://docs.snowplow.io/docs/sources/trackers/roku-tracker/
 
 [gh-actions]: https://github.com/snowplow-incubator/snowplow-roku-tracker/actions/workflows/build.yml
 [gh-actions-image]: https://github.com/snowplow-incubator/snowplow-roku-tracker/actions/workflows/build.yml/badge.svg
@@ -271,14 +268,12 @@ limitations under the License.
 [release-image]: https://img.shields.io/npm/v/@snowplow/roku-tracker
 [releases]: https://github.com/snowplow-incubator/snowplow-roku-tracker/releases
 
-[techdocs]: https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/roku-tracker/
+[techdocs]: https://docs.snowplow.io/docs/sources/trackers/roku-tracker/
 [techdocs-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/techdocs.png
-[setup]: https://docs.snowplowanalytics.com/docs/collecting-data/collecting-from-own-applications/roku-tracker/quick-start-guide
+[setup]: https://docs.snowplow.io/docs/sources/trackers/roku-tracker/quick-start-guide/
 [setup-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png
-
-[api-docs]: https://snowplow.github.io/snowplow-roku-tracker/
 
 [contributing-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 
-[tracker-classificiation]: https://github.com/snowplow/snowplow/wiki/Tracker-Maintenance-Classification
+[tracker-classificiation]: https://docs.snowplow.io/docs/sources/trackers/tracker-maintenance-classification/
 [early-release]: https://img.shields.io/static/v1?style=flat&label=Snowplow&message=Early%20Release&color=014477&labelColor=9ba0aa&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAeFBMVEVMaXGXANeYANeXANZbAJmXANeUANSQAM+XANeMAMpaAJhZAJeZANiXANaXANaOAM2WANVnAKWXANZ9ALtmAKVaAJmXANZaAJlXAJZdAJxaAJlZAJdbAJlbAJmQAM+UANKZANhhAJ+EAL+BAL9oAKZnAKVjAKF1ALNBd8J1AAAAKHRSTlMAa1hWXyteBTQJIEwRgUh2JjJon21wcBgNfmc+JlOBQjwezWF2l5dXzkW3/wAAAHpJREFUeNokhQOCA1EAxTL85hi7dXv/E5YPCYBq5DeN4pcqV1XbtW/xTVMIMAZE0cBHEaZhBmIQwCFofeprPUHqjmD/+7peztd62dWQRkvrQayXkn01f/gWp2CrxfjY7rcZ5V7DEMDQgmEozFpZqLUYDsNwOqbnMLwPAJEwCopZxKttAAAAAElFTkSuQmCC

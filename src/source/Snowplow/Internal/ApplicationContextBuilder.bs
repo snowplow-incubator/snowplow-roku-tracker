@@ -9,18 +9,26 @@
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
-namespace Snowplow.Internal.TrackerConstants
-    const TRACKER_VERSION = "0.2.0"
+import "pkg:/source/Snowplow/Internal/ApplicationContext.bs"
 
-    const REGISTRY_STATE_NAMESPACE = "_snowplow_state"
-    const ANON_UUID = "00000000-0000-0000-0000-000000000000"
-    const SERVER_ANON_HEADER = "SP-Anonymous"
+namespace Snowplow.Internal
+    class ApplicationContextBuilder
+        private context as object
 
-    const DEFAULT_SESSION_LIFETIME_SECONDS = 1800
+        sub new()
+            appInfo = CreateObject("roAppInfo")
 
-    const DEFAULT_NAMESPACE = "default"
-    const DEFAULT_METHOD = "POST"
+            m.context = new Snowplow.Internal.ApplicationContext()
 
-    const PROTOCOL_VENDOR = "com.snowplowanalytics.snowplow"
-    const PROTOCOL_VERSION = "tp2"
+            m.context.version = appInfo.GetVersion()
+
+            if appInfo.IsDev() then m.context.build = "dev" else m.context.build = "prod"
+        end sub
+
+        function getContext(configuration as object) as dynamic
+            if not configuration.applicationContext then return invalid
+            return m.context
+        end function
+
+    end class
 end namespace

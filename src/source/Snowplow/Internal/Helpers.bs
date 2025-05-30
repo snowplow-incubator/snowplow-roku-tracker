@@ -3,7 +3,7 @@ namespace Snowplow.Internal
         function currentTimestamp() as string
             dt = CreateObject("roDateTime")
             ms = dt.GetMilliseconds()
-            return dt.AsSeconds().ToStr() + m.padWithZeros(ms, 3)
+            return dt.AsSecondsLong().ToStr() + m.padWithZeros(ms, 3)
         end function
 
         private function padWithZeros(value as dynamic, padLength = 2 as integer) as string

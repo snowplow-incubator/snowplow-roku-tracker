@@ -8,7 +8,7 @@
 ' software distributed under the Apache License Version 2.0 is distributed on an
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
- 
+
 import "pkg:/source/Snowplow/Internal/EventContext.bs"
 import "pkg:/source/Snowplow/Internal/Helpers.bs"
 
@@ -16,7 +16,10 @@ namespace Snowplow.Internal
     class Event
         trackerNamespace as string
         domainUserId as string
+        domainSessionId as string
+        domainSessionIndex as integer
         networkUserId as string
+        userId as string
         appId as string
         eventId as string
         trackerVersion as string
@@ -47,6 +50,9 @@ namespace Snowplow.Internal
         private E_LANGUAGE = "lang"
         private E_NETWORK_UID = "tnuid"
         private E_DOMAIN_UID = "duid"
+        private E_DOMAIN_SID = "sid"
+        private E_DOMAIN_SIDX = "vid"
+        private E_USER_ID = "uid"
         private E_CONTEXT = "co"
         protected E_UNSTRUCTURED = "ue_pr"
 
@@ -88,7 +94,10 @@ namespace Snowplow.Internal
 
             ' optional properties
             if m.domainUserId <> invalid then payload[m.E_DOMAIN_UID] = m.domainUserId
+            if m.domainSessionId <> invalid then payload[m.E_DOMAIN_SID] = m.domainSessionId
+            if m.domainSessionIndex <> invalid then payload[m.E_DOMAIN_SIDX] = m.domainSessionIndex
             if m.networkUserId <> invalid then payload[m.E_NETWORK_UID] = m.networkUserId
+            if m.userId <> invalid then payload[m.E_USER_ID] = m.userId
             if m.appId <> invalid then payload[m.E_APPID] = m.appId
             if m.trueTimestamp <> invalid then payload[m.E_TRUE_TIMESTAMP] = m.trueTimestamp
             if m.timezone <> invalid then payload[m.E_TIMEZONE] = m.timezone

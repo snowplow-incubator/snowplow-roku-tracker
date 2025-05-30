@@ -5,7 +5,7 @@ class MockNetworkConnection
         m.requests = []
     end sub
 
-    function postRequest(url as string, body as dynamic, retryCount as integer) as boolean
+    function postRequest(url as string, body as dynamic, retryCount as integer, anonymous = false as boolean) as boolean
         m.requests.push({
             method: "POST",
             url: url,
@@ -15,7 +15,7 @@ class MockNetworkConnection
         return true
     end function
 
-    function getRequest(url as string, params as dynamic, retryCount as integer) as boolean
+    function getRequest(url as string, params as dynamic, retryCount as integer, anonymous = false as boolean) as boolean
         m.requests.push({
             method: "GET",
             url: url,

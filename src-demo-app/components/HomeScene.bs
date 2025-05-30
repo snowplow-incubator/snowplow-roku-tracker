@@ -131,7 +131,8 @@ end sub
 
 sub StartVideoTracking()
     m.global.snowplow.enableVideoTracking = {
-        video: m.Video
+        video: m.Video,
+        version: 2
     }
     m.isVideoTracking = true
 end sub
