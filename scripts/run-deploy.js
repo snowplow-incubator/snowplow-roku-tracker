@@ -5,10 +5,10 @@ require("dotenv").config();
 let deployed = false;
 
 function connect(ip) {
-    const telnetSession = new TelnetAdapter(ip);
+    const telnetSession = new TelnetAdapter({ host: ip });
     function handleOutput(responseText) {
         console.log(responseText);
-        if (match = /\[beacon.report\] \|AppExitComplete/i.exec(responseText.trim())) {
+        if (/\[beacon.report\] \|AppExitComplete/i.test(responseText.trim())) {
             if (deployed) {
                 telnetSession.destroy();
             }

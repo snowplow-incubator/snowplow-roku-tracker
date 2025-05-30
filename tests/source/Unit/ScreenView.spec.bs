@@ -10,7 +10,7 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("sets screen view properties")
-        function setsDeviceAndTrueTimestamp()
+        sub setsDeviceAndTrueTimestamp()
             event = new Snowplow.Internal.ScreenView({
                 id: "theId",
                 name: "theName",
@@ -22,14 +22,14 @@ namespace tests
             m.assertEqual("theName", event.name)
             m.assertEqual("theViewType", event.viewType)
             m.assertEqual("theTransitionType", event.transitionType)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         @describe("payload serialization")
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("serializes the payload parameters")
-        function serializesPayloadParameters()
+        sub serializesPayloadParameters()
             event = new Snowplow.Internal.ScreenView({
                 id: "theId",
                 name: "theName",
@@ -43,7 +43,7 @@ namespace tests
             m.assertNotEmpty(unstructured.schema)
             m.assertNotEmpty(unstructured.data.schema)
             m.assertEqual("theName", unstructured.data.data.name)
-        end function
+        end sub
 
     end class
 end namespace

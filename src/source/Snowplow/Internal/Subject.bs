@@ -8,24 +8,31 @@
 ' software distributed under the Apache License Version 2.0 is distributed on an
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
- 
-import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
+
+import "pkg:/source/Snowplow/Internal/ApplicationContextBuilder.bs"
 import "pkg:/source/Snowplow/Internal/DeviceInfoContextBuilder.bs"
+import "pkg:/source/Snowplow/Internal/ClientSessionContextBuilder.bs"
 
 namespace Snowplow.Internal
     class Subject
         configuration as object
         deviceInfoContextBuilder as object
+        sessionContextBuilder as object
+        applicationContextBuilder as object
 
         sub new(configuration as object)
             m.configuration = configuration
             m.deviceInfoContextBuilder = new Snowplow.Internal.DeviceInfoContextBuilder()
+            m.sessionContextBuilder = new Snowplow.Internal.ClientSessionContextBuilder(configuration)
+            m.applicationContextBuilder = new Snowplow.Internal.ApplicationContextBuilder()
         end sub
 
         sub updateEvent(event as object)
+            if event.domainSessionId = invalid then event.domainSessionId = m.getDomainUserId()
             if event.domainUserId = invalid then event.domainUserId = m.getDomainUserId()
             if event.networkUserId = invalid then event.networkUserId = m.getNetworkUserId()
             if event.appId = invalid then event.appId = m.getAppId()
+            if event.userId = invalid then event.userId = m.getUserId()
 
             event.trackerVersion = m.getTrackerVersion()
             event.trackerNamespace = m.getTrackerNamespace()
@@ -37,7 +44,18 @@ namespace Snowplow.Internal
 
             deviceInfoContext = m.deviceInfoContextBuilder.getContext(m.configuration)
             if deviceInfoContext <> invalid then event.addContext(deviceInfoContext)
+
+            m.sessionContextBuilder.updateState(event, m.configuration.sessionAsCookies, m.configuration.userAnonymous, m.configuration.sessionAnonymous)
+            clientSessionContext = m.sessionContextBuilder.getContext(m.configuration)
+            if clientSessionContext <> invalid then event.addContext(clientSessionContext)
+
+            applicationContext = m.applicationContextBuilder.getContext(m.configuration)
+            if applicationContext <> invalid then event.addContext(applicationContext)
         end sub
+
+        private function getDomainSessionId() as dynamic
+            return m.configuration.domainSessionId
+        end function
 
         private function getDomainUserId() as dynamic
             return m.configuration.domainUserId
@@ -45,6 +63,10 @@ namespace Snowplow.Internal
 
         private function getNetworkUserId() as dynamic
             return m.configuration.networkUserId
+        end function
+
+        private function getUserId() as dynamic
+            return m.configuration.userId
         end function
 
         private function getAppId() as dynamic
@@ -84,8 +106,7 @@ namespace Snowplow.Internal
         end function
 
         private function getTrackerVersion() as string
-            constants = new Snowplow.Internal.TrackerConstants()
-            return constants.TRACKER_VERSION
+            return `roku-${Snowplow.Internal.TrackerConstants.TRACKER_VERSION}`
         end function
     end class
 end namespace

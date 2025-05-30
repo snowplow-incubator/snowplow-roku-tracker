@@ -8,17 +8,19 @@
 ' software distributed under the Apache License Version 2.0 is distributed on an
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
- 
-namespace Snowplow.Internal
-    class TrackerConstants
-        TRACKER_VERSION = "0.2.0"
 
-        DEFAULT_NAMESPACE = "default"
-        DEFAULT_METHOD = "POST"
+namespace Snowplow.Internal.TrackerConstants
+    const TRACKER_VERSION = "0.3.0"
 
-        PROTOCOL_VENDOR = "com.snowplowanalytics.snowplow"
-        PROTOCOL_VERSION = "tp2"
+    const REGISTRY_STATE_NAMESPACE = "_snowplow_state"
+    const ANON_UUID = "00000000-0000-0000-0000-000000000000"
+    const SERVER_ANON_HEADER = "SP-Anonymous"
 
-        POST_CONTENT_TYPE = "application/json; charset=utf-8"
-    end class
+    const DEFAULT_SESSION_LIFETIME_SECONDS = 1800
+
+    const DEFAULT_NAMESPACE = "default"
+    const DEFAULT_METHOD = "POST"
+
+    const PROTOCOL_VENDOR = "com.snowplowanalytics.snowplow"
+    const PROTOCOL_VERSION = "tp2"
 end namespace

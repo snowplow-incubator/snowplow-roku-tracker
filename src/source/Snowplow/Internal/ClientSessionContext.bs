@@ -1,0 +1,61 @@
+import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
+
+namespace Snowplow.Internal
+    class ClientSessionContext extends BaseEventContext
+        ' generic properties
+        storageMechanism as string = "LOCAL_STORAGE"
+
+        ' current session properties
+        userId as string ' uuid for device
+        sessionId as string ' uuid for current session
+        sessionIndex as integer ' current session index
+        eventIndex as integer ' index of this event within current session
+        firstEventId as string ' first event ID in current session
+        firstEventTimestamp as string ' first event creation timestamp in current session
+        previousSessionId as string = invalid ' session id of sessionIndex - 1
+
+        ' parameters
+        private CS_USER_ID = "userId"
+        private CS_SESSION_ID = "sessionId"
+        private CS_SESSION_INDEX = "sessionIndex"
+        private CS_EVENT_INDEX = "eventIndex"
+        private CS_PREVIOUS_SESSION_ID = "previousSessionId"
+        private CS_STORAGE_MECHANISM = "storageMechanism"
+        private CS_FIRST_EVENT_ID = "firstEventId"
+        private CS_FIRST_EVENT_TIMESTAMP = "firstEventTimestamp"
+
+        ' constants
+        private CS_SCHEMA = "iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2"
+
+        override sub describe(logger)
+            infos = [
+                `User: ${m.userId}`,
+                `Session ID: ${m.sessionId}`,
+                `Session Index: ${m.sessionIndex}`,
+                `Event Index: ${m.eventIndex}`,
+                `First Event ID: ${m.firstEventId}`,
+                `First Event TS: ${m.firstEventTimestamp}`,
+                `Previous Session ID: ${m.previousSessionId}`
+            ]
+            logger.debug(infos.join(", "))
+        end sub
+
+        protected override function getPayloadData() as dynamic
+            payload = {}
+            payload[m.CS_USER_ID] = m.userId
+            payload[m.CS_SESSION_ID] = m.sessionId
+            payload[m.CS_SESSION_INDEX] = m.sessionIndex
+            payload[m.CS_EVENT_INDEX] = m.eventIndex
+            payload[m.CS_STORAGE_MECHANISM] = m.storageMechanism
+            payload[m.CS_FIRST_EVENT_ID] = m.firstEventId
+            payload[m.CS_FIRST_EVENT_TIMESTAMP] = m.firstEventTimestamp
+            if m.previousSessionId <> invalid then payload[m.CS_PREVIOUS_SESSION_ID] = m.previousSessionId
+
+            return payload
+        end function
+
+        protected override function getSchema() as string
+            return m.CS_SCHEMA
+        end function
+    end class
+end namespace

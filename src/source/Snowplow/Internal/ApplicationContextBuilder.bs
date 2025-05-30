@@ -9,36 +9,26 @@
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
-import "pkg:/source/Snowplow/Internal/Event.bs"
+import "pkg:/source/Snowplow/Internal/ApplicationContext.bs"
 
 namespace Snowplow.Internal
-    class SelfDescribing extends Event
-        data as object
-        schema as string
+    class ApplicationContextBuilder
+        private context as object
 
-        sub new(data as object)
-            super(data)
+        sub new()
+            appInfo = CreateObject("roAppInfo")
 
-            m.data = data.data
-            m.schema = data.schema
+            m.context = new Snowplow.Internal.ApplicationContext()
+
+            m.context.version = appInfo.GetVersion()
+
+            if appInfo.IsDev() then m.context.build = "dev" else m.context.build = "prod"
         end sub
 
-        override function preparePayloadToSend() as object
-            payload = super.preparePayloadToSend()
-
-            payload[m.E_UNSTRUCTURED] = FormatJson({
-                schema: m.E_SCHEMA_UNSTRUCT_EVENT,
-                data: {
-                    schema: m.schema,
-                    data: m.data
-                }
-            })
-
-            return payload
+        function getContext(configuration as object) as dynamic
+            if not configuration.applicationContext then return invalid
+            return m.context
         end function
 
-        override function getEventName() as dynamic
-            return m.E_EVENT_UNSTRUCTURED
-        end function
     end class
 end namespace

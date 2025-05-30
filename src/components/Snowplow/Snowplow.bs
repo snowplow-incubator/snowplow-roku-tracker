@@ -22,8 +22,15 @@ sub init()
     m.top.ObserveField("screenView", "trackScreenView")
     m.top.ObserveField("selfDescribing", "trackSelfDescribing")
     m.top.ObserveField("structured", "trackStructured")
-    m.top.ObserveField("enableVideoTracking", "trackVideoPlayer")
-    m.top.ObserveField("disableVideoTracking", "stopTrackingVideoPlayer")
+    m.top.ObserveField("enableAudioTracking", "trackMedia")
+    m.top.ObserveField("enableMediaTracking", "trackMedia")
+    m.top.ObserveField("enableVideoTracking", "trackMedia")
+    m.top.ObserveField("disableAudioTracking", "stopTrackingMedia")
+    m.top.ObserveField("disableMediaTracking", "stopTrackingMedia")
+    m.top.ObserveField("disableVideoTracking", "stopTrackingMedia")
+    m.top.ObserveField("trackAudioEvent", "trackMediaEvent")
+    m.top.ObserveField("trackMediaEvent", "trackMediaEvent")
+    m.top.ObserveField("trackVideoEvent", "trackMediaEvent")
 
     m.trackerNamespaces = []
 end sub
@@ -66,25 +73,25 @@ sub trackStructured(data)
     end for
 end sub
 
-' Initilializes video tracking using all initialized trackers
-' @param {assocarray} data Video player properties
-sub trackVideoPlayer(data)
-    data = m.top.enableVideoTracking
+' Initializes media tracking using all initialized trackers
+' @param {assocarray} data Media player properties
+sub trackMedia(data as object)
+    data = data.getData()
     if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
     for each trackerNamespace in m.trackerNamespaces
-        m.log.debug(`Init video player in namespace: ${trackerNamespace}`)
-        m.top[trackerNamespace].enableVideoTracking = data
+        m.log.debug(`Init media player in namespace: ${trackerNamespace}`)
+        m.top[trackerNamespace].enableMediaTracking = data
     end for
 end sub
 
-' Stop video tracking and unobserve video on all initialized trackers
-' @param {assocarray} data Video properties
-sub stopTrackingVideoPlayer(data)
-    data = m.top.disableVideoTracking
+' Stop media tracking and unobserve events on all initialized trackers
+' @param {assocarray} data Media properties
+sub stopTrackingMedia(data)
+    data = data.getData()
     if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
     for each trackerNamespace in m.trackerNamespaces
-        m.log.debug(`Finished video playback in namespace: ${trackerNamespace}`)
-        m.top[trackerNamespace].disableVideoTracking = data
+        m.log.debug(`Finished media playback in namespace: ${trackerNamespace}`)
+        m.top[trackerNamespace].disableMediaTracking = data
     end for
 end sub
 
@@ -95,6 +102,5 @@ sub createTracker(trackerNamespace, data)
 end sub
 
 function getNamespaceFromData(data) as string
-    constants = new Snowplow.Internal.TrackerConstants()
-    return data.namespace ?? constants.DEFAULT_NAMESPACE
+    return data.namespace ?? Snowplow.Internal.TrackerConstants.DEFAULT_NAMESPACE
 end function

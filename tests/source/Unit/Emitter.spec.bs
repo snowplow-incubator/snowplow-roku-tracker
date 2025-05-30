@@ -14,7 +14,7 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("makes a get request")
-        function getRequest()
+        sub getRequest()
             configuration = new Snowplow.Internal.Configuration({
                 network: {
                     collector: "collector",
@@ -34,10 +34,10 @@ namespace tests
             m.assertEqual("GET", request.method)
             m.assertEqual("https://collector/i", request.url)
             m.assertEqual("theCategory", request.params.se_ca)
-        end function
+        end sub
 
         @it("makes a post request")
-        function postRequest()
+        sub postRequest()
             configuration = new Snowplow.Internal.Configuration({
                 network: {
                     collector: "collector",
@@ -57,10 +57,10 @@ namespace tests
             m.assertEqual("POST", request.method)
             m.assertEqual("https://collector/com.snowplowanalytics.snowplow/tp2", request.url)
             m.assertEqual("theCategory", request.body.data[0].se_ca)
-        end function
+        end sub
 
         @it("sets the retry count")
-        function setsRetryCount()
+        sub setsRetryCount()
             configuration = new Snowplow.Internal.Configuration({
                 network: {
                     collector: "collector",
@@ -78,7 +78,7 @@ namespace tests
 
             request = connection.requests[0]
             m.assertEqual(10, request.retryCount)
-        end function
+        end sub
 
     end class
 end namespace

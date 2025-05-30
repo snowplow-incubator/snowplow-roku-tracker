@@ -12,35 +12,45 @@
 import "pkg:/source/Snowplow/Internal/BaseEventContext.bs"
 
 namespace Snowplow.Internal
-    class MediaPlayerContext extends BaseEventContext
+    class MediaPlayerContextV2 extends BaseEventContext
         currentTime as double
         duration as double
         ended as boolean
-        live as boolean
+        fullscreen as boolean
+        livestream as boolean
+        label as string
         loop as boolean
+        mediaType as string
         muted as boolean
         paused as boolean
-        percentProgress as integer
+        pictureInPicture as boolean
         playbackRate as double
+        playerType as string
+        quality as string
         volume as integer
 
         ' parameters
         private MPC_CURRENT_TIME = "currentTime"
         private MPC_DURATION = "duration"
         private MPC_ENDED = "ended"
+        private MPC_FULLSCREEN = "fullscreen"
+        private MPC_LIVESTREAM = "livestream"
+        private MPC_LABEL = "label"
         private MPC_LOOP = "loop"
-        private MPC_LIVE = "isLive"
+        private MPC_MEDIA_TYPE = "mediaType"
         private MPC_MUTED = "muted"
         private MPC_PAUSED = "paused"
-        private MPC_PERCENT_PROGRESS = "percentProgress"
+        private MPC_PICTURE_IN_PICTURE = "pictureInPicture"
         private MPC_PLAYBACK_RATE = "playbackRate"
+        private MPC_PLAYER_TYPE = "playerType"
+        private MPC_QUALITY = "quality"
         private MPC_VOLUME = "volume"
 
         ' constants
-        private MPC_SCHEMA_MEDIA_PLAYER = "iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/1-0-0"
+        private MPC_SCHEMA_MEDIA_PLAYER = "iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/2-0-0"
 
         override sub describe(logger)
-            logger.debug(`Time ${m.currentTime}, duration: ${m.duration}, ended: ${m.ended}, live: ${m.live}, loop: ${m.loop}, muted: ${m.muted}, paused: ${m.paused}, progress: ${m.percentProgress}%, rate: ${m.playbackRate}, volume: ${m.volume}`)
+            logger.debug(`Time ${m.currentTime}, duration: ${m.duration}, ended: ${m.ended}, fullscreen: ${m.fullscreen}, livestream: ${m.livestream}, label: ${m.label}, loop: ${m.loop}, mediaType: ${m.mediaType}, muted: ${m.muted}, paused: ${m.paused}, pictureInPicture: ${m.pictureInPicture}%, rate: ${m.playbackRate}, playerType: ${m.playerType}, quality: ${m.quality}, volume: ${m.volume}`)
         end sub
 
         protected override function getPayloadData() as dynamic
@@ -48,12 +58,17 @@ namespace Snowplow.Internal
             payload[m.MPC_CURRENT_TIME] = m.currentTime
             payload[m.MPC_DURATION] = m.duration
             payload[m.MPC_ENDED] = m.ended
-            payload[m.MPC_LIVE] = m.live
+            payload[m.MPC_FULLSCREEN] = m.fullscreen
+            payload[m.MPC_LIVESTREAM] = m.livestream
+            payload[m.MPC_LABEL] = m.label
             payload[m.MPC_LOOP] = m.loop
+            payload[m.MPC_MEDIA_TYPE] = m.mediaType
             payload[m.MPC_MUTED] = m.muted
             payload[m.MPC_PAUSED] = m.paused
-            payload[m.MPC_PERCENT_PROGRESS] = m.percentProgress
+            payload[m.MPC_PICTURE_IN_PICTURE] = m.pictureInPicture
             payload[m.MPC_PLAYBACK_RATE] = m.playbackRate
+            payload[m.MPC_PLAYER_TYPE] = m.playerType
+            payload[m.MPC_QUALITY] = m.quality
             payload[m.MPC_VOLUME] = m.volume
             return payload
         end function

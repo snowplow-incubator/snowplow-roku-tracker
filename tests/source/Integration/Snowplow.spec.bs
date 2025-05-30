@@ -15,7 +15,7 @@ namespace tests
         end sub
 
         @it("supports multiple trackers with different namespaces")
-        function supportsMultipleTrackers()
+        sub supportsMultipleTrackers()
             m.global.snowplow.init = {
                 namespace: "ns1",
                 network: {
@@ -65,10 +65,10 @@ namespace tests
                 end for
                 return namespaceCounts.ns1 = 1 and namespaceCounts.ns2 = 2
             end function)
-        end function
+        end sub
 
         @it("tracks using all tracker namespaces")
-        function tracksUsingAllTrackerNamespaces()
+        sub tracksUsingAllTrackerNamespaces()
             m.global.snowplow.init = {
                 namespace: "ns1",
                 network: {
@@ -103,7 +103,7 @@ namespace tests
                 end for
                 return namespaceCounts.ns1 = 1 and namespaceCounts.ns2 = 1
             end function)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         @describe("Event tracking to Micro")
@@ -115,7 +115,7 @@ namespace tests
         end sub
 
         @it("tracks structured events")
-        function tracksStructuredEvent()
+        sub tracksStructuredEvent()
             m.global.snowplow.init = {
                 network: m.networkConfig
             }
@@ -130,10 +130,10 @@ namespace tests
             m.assertMicroCounts(function(counts)
                 return counts.good = 1 and counts.bad = 0
             end function)
-        end function
+        end sub
 
         @it("tracks screen view events")
-        function tracksScreenViewEvent()
+        sub tracksScreenViewEvent()
             m.global.snowplow.init = {
                 network: m.networkConfig
             }
@@ -149,10 +149,10 @@ namespace tests
             m.assertMicroCounts(function(counts)
                 return counts.good = 1 and counts.bad = 0
             end function)
-        end function
+        end sub
 
         @it("tracks self-describing events")
-        function tracksSelfDescribingEvent()
+        sub tracksSelfDescribingEvent()
             m.global.snowplow.init = {
                 network: m.networkConfig
             }
@@ -168,10 +168,10 @@ namespace tests
             m.assertMicroCounts(function(counts)
                 return counts.good = 1 and counts.bad = 0
             end function)
-        end function
+        end sub
 
         @it("tracks event with context")
-        function tracksEventWithContext()
+        sub tracksEventWithContext()
             m.global.snowplow.init = {
                 network: m.networkConfig
             }
@@ -198,7 +198,7 @@ namespace tests
             end function)
 
             m.assertMicroGoodEvents(m.containsCustomContext)
-        end function
+        end sub
 
         private function containsCustomContext(events)
             event = events[0]
@@ -210,7 +210,7 @@ namespace tests
         end function
 
         @it("adds device info context")
-        function addsDeviceInfoContext()
+        sub addsDeviceInfoContext()
             m.global.snowplow.init = {
                 network: m.networkConfig
             }
@@ -221,7 +221,7 @@ namespace tests
             }
 
             m.assertMicroGoodEvents(m.containsDeviceInfoContext)
-        end function
+        end sub
 
         private function containsDeviceInfoContext(events)
             event = events[0]

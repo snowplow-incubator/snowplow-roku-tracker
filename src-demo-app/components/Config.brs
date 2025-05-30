@@ -18,33 +18,33 @@ function loadConfig() as object
         '}
 
         {
-            Title: "Big Buck Bunny"
-            ContentType: "movie"
-            streamFormat: "mp4"
-            Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg"
+            Title: "Big Buck Bunny",
+            ContentType: "movie",
+            streamFormat: "mp4",
+            Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
             Stream: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
         }
         {
-            Title: "Elephant Dream"
-            streamFormat: "mp4"
-            Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg"
+            Title: "Elephant Dream",
+            streamFormat: "mp4",
+            Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",
             Stream: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
         }
         {
-            Title: "Sintel"
-            streamFormat: "mp4"
-            Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg"
+            Title: "Sintel",
+            streamFormat: "mp4",
+            Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg",
             Stream: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
         }
         {
-            Stream: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
-            streamFormat: "mp4"
-            Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg"
+            Stream: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+            streamFormat: "mp4",
+            Logo: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg",
             Title: "Tears of Steel"
         }
         {
-            Stream: "http://commondatastorage.googleapis.com/wrongUrl/raisesError.mp4"
-            streamFormat: "mp4"
+            Stream: "http://commondatastorage.googleapis.com/wrongUrl/raisesError.mp4",
+            streamFormat: "mp4",
             Title: "Error"
         }
 

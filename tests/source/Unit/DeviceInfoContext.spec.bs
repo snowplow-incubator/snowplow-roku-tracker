@@ -10,7 +10,7 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("contains basic properties")
-        function shouldContainBasicProperties()
+        sub shouldContainBasicProperties()
             context = new Snowplow.Internal.DeviceInfoContext()
             context.model = "3940EU"
             context.osVersion = "10.5812"
@@ -19,10 +19,10 @@ namespace tests
             m.assertEqual(data.data.model, "3940EU")
             m.assertEqual(data.data.osVersion, "10.5812")
             m.assertEqual(data.data.videoMode, "1080p")
-        end function
+        end sub
 
         @it("lists enabled features")
-        function shouldListEnabledFeatures()
+        sub shouldListEnabledFeatures()
             context = new Snowplow.Internal.DeviceInfoContext()
             context.sdOnlyHardware = true
             context.handsfreeVoice = true
@@ -30,10 +30,10 @@ namespace tests
             m.assertEqual(2, data.data.features.count())
             m.assertArrayContains(data.data.features, "sd_only_hardware")
             m.assertArrayContains(data.data.features, "handsfree_voice")
-        end function
+        end sub
 
         @it("lists display properties")
-        function shouldListDisplayProperties()
+        sub shouldListDisplayProperties()
             context = new Snowplow.Internal.DeviceInfoContext()
             context.internalDisplay = true
             context.dolbyVision = true
@@ -41,7 +41,7 @@ namespace tests
             m.assertEqual(2, data.data.displayProperties.count())
             m.assertArrayContains(data.data.displayProperties, "Internal")
             m.assertArrayContains(data.data.displayProperties, "DolbyVision")
-        end function
+        end sub
 
     end class
 end namespace

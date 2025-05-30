@@ -8,42 +8,63 @@
 ' software distributed under the Apache License Version 2.0 is distributed on an
 ' "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
- 
+
 import "pkg:/source/Snowplow/Internal/TrackerConstants.bs"
 
 namespace Snowplow.Internal
     class Configuration
         trackerNamespace as string
+        sessionLifetimeSeconds as integer
 
         ' network
         collector as string
         method as string
         retryCount = 0
+        serverAnonymous = false
 
         ' subject
+        domainSessionId as string
         domainUserId as string
         networkUserId as string
+        userId as string
         appId as string
         deviceContext = true
+        sessionContext = true
+        applicationContext = false
+
+        sessionAsCookies = false
+        userAnonymous = false
+        sessionAnonymous = false
+
         RIDATracking = true
 
         sub new(config)
-            constants = new Snowplow.Internal.TrackerConstants()
-
-            m.trackerNamespace = config.namespace ?? constants.DEFAULT_NAMESPACE
+            m.trackerNamespace = config.namespace ?? Snowplow.Internal.TrackerConstants.DEFAULT_NAMESPACE
+            m.sessionLifetimeSeconds = config.sessionLifetimeSeconds ?? Snowplow.Internal.TrackerConstants.DEFAULT_SESSION_LIFETIME_SECONDS
 
             if config.network <> invalid
                 m.collector = config.network.collector
-                m.method = config.network.method ?? constants.DEFAULT_METHOD
+                m.method = config.network.method ?? Snowplow.Internal.TrackerConstants.DEFAULT_METHOD
                 if config.network.retryCount <> invalid then m.retryCount = config.network.retryCount
+                if config.network.serverAnonymous <> invalid then m.serverAnonymous = config.network.serverAnonymous
             end if
 
             if config.subject <> invalid
+                m.domainSessionId = config.subject.domainSessionId
                 m.domainUserId = config.subject.domainUserId
                 m.networkUserId = config.subject.networkUserId
+                m.userId = config.subject.userId
                 m.appId = config.subject.appId
+
                 m.deviceContext = config.subject.deviceContext ?? true
+                m.sessionContext = config.subject.sessionContext ?? true
+                m.applicationContext = config.subject.applicationContext ?? false
                 m.RIDATracking = config.subject.RIDATracking ?? true
+
+                m.sessionAsCookies = config.subject.sessionAsCookies ?? false
+                m.userAnonymous = config.subject.userAnonymous ?? false
+                m.sessionAnonymous = config.subject.sessionAnonymous ?? false
+                m.serverAnonymous = config.subject.serverAnonymous ?? false
             end if
         end sub
     end class

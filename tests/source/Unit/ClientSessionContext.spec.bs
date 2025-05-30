@@ -1,0 +1,24 @@
+import "pkg:/source/Snowplow/Internal/ClientSessionContext.bs"
+
+namespace tests
+
+    @suite("Client session entity tests")
+    class ClientSessionContextTests extends Rooibos.BaseTestSuite
+
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("creates payload body with correct properties")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("contains basic properties")
+        sub shouldContainBasicProperties()
+            context = new Snowplow.Internal.ClientSessionContext()
+            context.userId = "00000000-0000-0000-0000-000000000001"
+            context.sessionId = "00000000-0000-0000-0000-000000000002"
+            context.sessionIndex = 1
+            data = context.prepareDataToSend()
+            m.assertEqual(data.data.userId, "00000000-0000-0000-0000-000000000001")
+            m.assertEqual(data.data.sessionId, "00000000-0000-0000-0000-000000000002")
+            m.assertEqual(data.data.sessionIndex, 1)
+        end sub
+    end class
+end namespace

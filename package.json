@@ -1,6 +1,6 @@
 {
   "name": "@snowplow/roku-tracker",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Roku tracker for Snowplow",
   "keywords": [
     "ropm",
@@ -17,11 +17,11 @@
     "dist/**/!(*.spec.)*"
   ],
   "scripts": {
-    "build": "node scripts/run.js",
-    "build-demo-app": "node scripts/run-demo-app.js",
-    "build-tests": "node scripts/run-tests.js",
+    "build": "bsc --project bsconfig-dist.json",
+    "build-demo-app": "bsc --project bsconfig-demo-app.json",
+    "build-tests": "bsc --project bsconfig-tests.json",
     "package": "bsc --create-package",
-    "lint": "bslint",
+    "lint": "bslint --project bsconfig-demo-app.json && bslint --project bsconfig-tests.json",
     "deploy": "node scripts/run-deploy.js",
     "demo-app": "npm run build-demo-app && npm run deploy",
     "test": "npm run build-tests && npm run deploy"
@@ -35,16 +35,16 @@
     "Matus Tomlein"
   ],
   "devDependencies": {
-    "@rokucommunity/bslint": "^0.5.0",
-    "brighterscript": "^0.39.4",
-    "roku-debug": "^0.8.6",
-    "roku-deploy": "^3.5.2",
-    "rooibos-roku": "^4.4.2"
+    "@rokucommunity/bslint": "^0.8.28",
+    "brighterscript": "^0.69.1",
+    "dotenv": "^16.4.7",
+    "roku-debug": "^0.19.1",
+    "roku-deploy": "^3.12.4",
+    "rooibos-roku": "^5.15.5"
   },
   "dependencies": {
-    "dotenv": "^10.0.0",
-    "roku-requests": "0.2.0",
-    "log": "npm:roku-log@^0.5.1"
+    "log": "npm:roku-log@^0.5.1",
+    "roku-requests": "0.2.0"
   },
   "ropm": {
     "rootDir": "src",

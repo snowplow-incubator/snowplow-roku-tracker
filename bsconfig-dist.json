@@ -1,6 +1,6 @@
 {
     "rootDir": "src",
-    "stagingFolderPath": "dist",
+    "stagingDir": "dist",
     "autoImportComponentScript": true,
     "ignoreErrorCodes": [1107],
     "createPackage": false,

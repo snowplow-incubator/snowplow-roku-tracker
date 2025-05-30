@@ -20,6 +20,10 @@ namespace Snowplow.Internal
         private label as dynamic
         private captureEvents as object
         private sentBoundaries as object
+        private pingInterval as integer
+        private lastPositionPing as integer
+
+        private entities as object
 
         ' constants
         private MEDIA_EVENT_PERCENT_PROGRESS = "percentprogress"
@@ -35,12 +39,14 @@ namespace Snowplow.Internal
             options = data.options ?? {}
 
             m.id = CreateObject("roDeviceInfo").GetRandomUUID()
-            m.video = data.video
-            m.label = options.label
+            m.video = data.media ?? data.video ?? data.audio
+            m.label = options.label ?? data.label
             m.captureEvents = {}
             m.sentBoundaries = {}
             m.positionInterval = options.positionInterval ?? 5
             m.lastPositionPing = 0
+
+            m.entities = data.entities ?? data.context ?? []
 
             events = options.captureEvents ?? [
                 m.MEDIA_EVENT_PERCENT_PROGRESS,
@@ -149,7 +155,7 @@ namespace Snowplow.Internal
             return event
         end function
 
-        private sub addContext(event as object, info as object)
+        sub addContext(event as object, info as object)
             mediaPlayerContext = new Snowplow.Internal.MediaPlayerContext()
             mediaPlayerContext.currentTime = info.position
             mediaPlayerContext.duration = info.duration
@@ -171,7 +177,7 @@ namespace Snowplow.Internal
             rokuVideoContext.contentType = m.getContentType(info)
             rokuVideoContext.streamFormat = m.getStreamFormat(info)
             rokuVideoContext.streamUrl = m.getStreamUrl(info)
-            rokuVideoContext.videoFormat = m.getVideoFormat(info)
+            rokuVideoContext.videoFormat = m.getMediaFormat(info)
             rokuVideoContext.isUnderrun = m.isUnderrun(info)
             rokuVideoContext.isResumed = m.isResumed(info)
             rokuVideoContext.measuredBitrate = m.getMeasuredBitrate(info)
@@ -181,6 +187,10 @@ namespace Snowplow.Internal
             rokuVideoContext.height = info.height
             rokuVideoContext.errorStr = m.getErrorStr(info)
             event.addContext(rokuVideoContext)
+
+            for each e in m.entities
+                event.addContext(e)
+            end for
         end sub
 
         private function getInfoFields() as object
@@ -193,6 +203,7 @@ namespace Snowplow.Internal
                 "state",
                 "loop",
                 "mute",
+                "audioFormat",
                 "videoFormat",
                 "playbackSpeed",
                 "width",
@@ -246,8 +257,8 @@ namespace Snowplow.Internal
             if info.content <> invalid and info.content.contentType <> invalid and info.content.ContentType > 0
                 mappings = {
                     "1": "movie",
-                    "3": "season",
                     "2": "series",
+                    "3": "season",
                     "4": "episode",
                     "5": "audio"
                 }
@@ -325,8 +336,9 @@ namespace Snowplow.Internal
             return invalid
         end function
 
-        private function getVideoFormat(info) as dynamic
+        private function getMediaFormat(info) as dynamic
             if m.isNonEmptyString(info.videoFormat) then return info.videoFormat
+            if m.isNonEmptyString(info.audioFormat) then return info.audioFormat
             return invalid
         end function
 

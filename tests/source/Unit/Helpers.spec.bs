@@ -15,20 +15,20 @@ namespace tests
         end sub
 
         @it("returns timestamps larger than current unix seconds")
-        function currentTimestampLargerThanUnixSeconds()
+        sub currentTimestampLargerThanUnixSeconds()
             tm1 = CreateObject("roDateTime").AsSeconds().ToStr() + "000"
             tm2 = m.helpers.currentTimestamp()
 
             m.assertTrue(tm1 < tm2)
-        end function
+        end sub
 
         @it("returns timestamps that increase over time")
-        function currentTimestampIncreases()
+        sub currentTimestampIncreases()
             tm1 = m.helpers.currentTimestamp()
             sleep(100)
             tm2 = m.helpers.currentTimestamp()
 
             m.assertTrue(tm1 < tm2)
-        end function
+        end sub
     end class
 end namespace

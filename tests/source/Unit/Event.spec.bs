@@ -11,7 +11,7 @@ namespace tests
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("sets device and true timestamp")
-        function setsDeviceAndTrueTimestamp()
+        sub setsDeviceAndTrueTimestamp()
             tm1 = m.getTimestamp()
             event = new Snowplow.Internal.Event({ ttm: tm1 })
             tm2 = m.getTimestamp()
@@ -20,10 +20,10 @@ namespace tests
             m.assertTrue(event.deviceTimestamp >= tm1)
             m.assertTrue(event.deviceTimestamp <= tm2)
             m.assertEqual(tm1, event.trueTimestamp)
-        end function
+        end sub
 
         @it("sets context")
-        function setsContexts()
+        sub setsContexts()
             event = new Snowplow.Internal.Event({
                 context: [
                     { data: { test: "test1" }, schema: "schema1" },
@@ -33,24 +33,24 @@ namespace tests
             m.assertEqual(2, event.context.count())
             m.assertEqual("schema1", event.context[0].schema)
             m.assertEqual("schema2", event.context[1].schema)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         @describe("validate preparePayloadToSend output")
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("contains required parameters")
-        function payloadContainsRequiredParameters()
+        sub payloadContainsRequiredParameters()
             event = new Snowplow.Internal.Event({})
             payload = event.preparePayloadToSend()
             m.assertNotInvalid(payload.dtm)
             m.assertNotInvalid(payload.stm)
             m.assertNotInvalid(payload.eid)
             m.assertInvalid(payload.co)
-        end function
+        end sub
 
         @it("contains context")
-        function payloadContainsRequiredParameters()
+        sub payloadContainsRequiredParameters()
             event = new Snowplow.Internal.Event({
                 context: [
                     { data: { test: "test1" }, schema: "schema1" }
@@ -62,27 +62,27 @@ namespace tests
             context = ParseJson(payload.co)
             m.assertEqual(context.schema, "iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-1")
             m.assertEqual(context.data.count(), 1)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         @describe("validate prepareDataToSend output")
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         @it("contains schema URI")
-        function hasSchema()
+        sub hasSchema()
             event = new Snowplow.Internal.Event({})
             data = event.prepareDataToSend()
 
             m.assertTrue(data.schema.StartsWith("iglu:com.snowplowanalytics.snowplow"))
-        end function
+        end sub
 
         @it("contains data array")
-        function hasDataArray()
+        sub hasDataArray()
             event = new Snowplow.Internal.Event({})
             data = event.prepareDataToSend()
 
             m.assertEqual(data.data.Count(), 1)
-        end function
+        end sub
 
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         ' helper functions

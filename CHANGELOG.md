@@ -1,3 +1,22 @@
+Version 0.3.0 (2025-05-30)
+--------------------------
+
+Add tracker prefix (roku-) in the tracker version field tracked in events (#18)
+Support for setting User ID field (#17)
+Session ID support (via client_session entity or domain_*id values) (#6)
+Add support for the application entity
+Add support for anonymous tracking
+Media tracking changes:
+  Support for Audio nodes
+  Support for custom entities
+  Fix for label configuration not matching documentation
+  Allow disabling the com.roku/video entity
+  Media Schemas v2 support
+
+Adds support for media tracking v2 schema
+Fix some lint configuration
+General dependency/build ecosystem updates
+
 Version 0.2.0 (2021-12-23)
 --------------------------
 

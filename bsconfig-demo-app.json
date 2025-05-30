@@ -15,9 +15,9 @@
         },
         "!**/*.spec.bs"
     ],
-    "stagingFolderPath": "build",
+    "stagingDir": "build",
     "createPackage": false,
-    "retainStagingFolder": true,
+    "retainStagingDir": true,
     "autoImportComponentScript": true,
     "sourceMap": true,
     "ignoreErrorCodes": [1107],
