@@ -172,5 +172,15 @@ namespace Snowplow.Internal
             end for
             return invalid
         end function
+
+        sub trackApplicationInstall()
+            if m.subject.newInstall
+                event = new Snowplow.Internal.SelfDescribing({
+                    schema: "iglu:com.snowplowanalytics.mobile/application_install/jsonschema/1-0-0",
+                    data: {}
+                })
+                m.trackEvent(event)
+            end if
+        end sub
     end class
 end namespace

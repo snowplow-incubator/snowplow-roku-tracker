@@ -19,12 +19,15 @@ namespace Snowplow.Internal
         deviceInfoContextBuilder as object
         sessionContextBuilder as object
         applicationContextBuilder as object
+        newInstall as boolean
 
         sub new(configuration as object)
             m.configuration = configuration
             m.deviceInfoContextBuilder = new Snowplow.Internal.DeviceInfoContextBuilder()
             m.sessionContextBuilder = new Snowplow.Internal.ClientSessionContextBuilder(configuration)
             m.applicationContextBuilder = new Snowplow.Internal.ApplicationContextBuilder()
+
+            m.newInstall = m.sessionContextBuilder.isNewInstall()
         end sub
 
         sub updateEvent(event as object)

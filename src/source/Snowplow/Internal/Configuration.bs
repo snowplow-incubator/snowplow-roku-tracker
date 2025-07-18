@@ -15,6 +15,7 @@ namespace Snowplow.Internal
     class Configuration
         trackerNamespace as string
         sessionLifetimeSeconds as integer
+        trackInstall = false
 
         ' network
         collector as string
@@ -41,6 +42,7 @@ namespace Snowplow.Internal
         sub new(config)
             m.trackerNamespace = config.namespace ?? Snowplow.Internal.TrackerConstants.DEFAULT_NAMESPACE
             m.sessionLifetimeSeconds = config.sessionLifetimeSeconds ?? Snowplow.Internal.TrackerConstants.DEFAULT_SESSION_LIFETIME_SECONDS
+            m.trackInstall = config.trackInstall ?? false
 
             if config.network <> invalid
                 m.collector = config.network.collector
