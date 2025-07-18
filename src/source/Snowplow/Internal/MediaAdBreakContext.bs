@@ -27,7 +27,7 @@ namespace Snowplow.Internal
         private MABC_POD_SIZE = "podSize"
 
         ' constants
-        private MAC_SCHEMA_MEDIA_AD_BREAK = "iglu:com.snowplowanalytics.snowplow.media/ad_break/jsonschema/1-0-0"
+        private MABC_SCHEMA_MEDIA_AD_BREAK = "iglu:com.snowplowanalytics.snowplow.media/ad_break/jsonschema/1-0-0"
 
         override sub describe(logger)
             logger.debug(`Ad Break ID ${m.breakId}, Name: ${m.name}, startTime: ${m.startTime}, breakType: ${m.breakType}, podSize: ${m.podSize}`)
