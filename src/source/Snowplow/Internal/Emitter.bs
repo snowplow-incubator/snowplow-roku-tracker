@@ -15,10 +15,12 @@ namespace Snowplow.Internal
     class Emitter
         configuration as Object
         networkConnection as Object
+        cookies as dynamic
 
         sub new(configuration as Object, networkConnection as Object)
             m.configuration = configuration
             m.networkConnection = networkConnection
+            m.cookies = invalid
             m.log = new log.Logger("Snowplow")
         end sub
 
@@ -26,13 +28,17 @@ namespace Snowplow.Internal
             url = m.createUrl()
             if m.configuration.method = "GET"
                 params = event.preparePayloadToSend()
-                success = m.networkConnection.getRequest(url, params, m.getRetryCount(), m.configuration.serverAnonymous)
+                response = m.networkConnection.getRequest(url, params, m.getRetryCount(), m.configuration.serverAnonymous, m.cookies)
             else
                 data = event.prepareDataToSend()
-                success = m.networkConnection.postRequest(url, data, m.getRetryCount(), m.configuration.serverAnonymous)
+                response = m.networkConnection.postRequest(url, data, m.getRetryCount(), m.configuration.serverAnonymous, m.cookies)
             end if
 
-            if not success
+            if response.cookies <> invalid and response.cookies.Count() = 1
+                m.cookies = response.cookies
+            end if
+
+            if not response.ok
                 m.log.error("[emitter] Failed to send event to Snowplow collector")
             end if
         end sub
