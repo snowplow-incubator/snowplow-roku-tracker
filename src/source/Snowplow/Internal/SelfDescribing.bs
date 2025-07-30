@@ -19,7 +19,7 @@ namespace Snowplow.Internal
         sub new(data as object)
             super(data)
 
-            m.data = data.data
+            m.data = data.data ?? {}
             m.schema = data.schema
         end sub
 
