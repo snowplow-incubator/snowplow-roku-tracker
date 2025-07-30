@@ -188,7 +188,8 @@ namespace Snowplow.Internal
             rokuVideoContext.errorStr = m.getErrorStr(info)
             event.addContext(rokuVideoContext)
 
-            for each e in m.entities
+            for each i in m.entities
+                e = Snowplow.Internal.EventContext(i)
                 event.addContext(e)
             end for
         end sub

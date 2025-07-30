@@ -375,7 +375,8 @@ namespace Snowplow.Internal
                 event.addContext(rokuVideoContext)
             end if
 
-            for each e in m.entities
+            for each i in m.entities
+                e = new Snowplow.Internal.EventContext(i)
                 event.addContext(e)
             end for
         end sub
