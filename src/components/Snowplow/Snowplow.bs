@@ -84,6 +84,16 @@ sub trackMedia(data as object)
     end for
 end sub
 
+' Tracks a custom media event with associated media player entities
+' @param {assocarray} data Custom media event
+sub trackMediaEvent(data as object)
+    data = data.getData()
+    if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
+    for each trackerNamespace in m.trackerNamespaces
+        m.top[trackerNamespace].trackMediaEvent = data
+    end for
+end sub
+
 ' Stop media tracking and unobserve events on all initialized trackers
 ' @param {assocarray} data Media properties
 sub stopTrackingMedia(data)

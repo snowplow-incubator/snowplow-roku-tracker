@@ -30,6 +30,7 @@ namespace Snowplow.Internal
         sessionIndex as integer
         eventIndex as integer
         previousSessionId as string
+        newInstall = false
 
         sub new(configuration as object)
             m.tracker = configuration.trackerNamespace
@@ -43,7 +44,10 @@ namespace Snowplow.Internal
 
             ' restore previous state
             m.userId = m.registry.Read(`${m.tracker}:userId`)
-            if m.userId = "" then m.userId = m.deviceInfo.GetRandomUUID()
+            if m.userId = ""
+                m.userId = m.deviceInfo.GetRandomUUID()
+                m.newInstall = true
+            end if
 
             storedSessionId = m.registry.Read(`${m.tracker}:sessionId`)
             m.previousSessionId = storedSessionId <> "" ? storedSessionId : invalid
@@ -107,6 +111,10 @@ namespace Snowplow.Internal
             if not configuration.sessionContext then return invalid
             m.registry.flush()
             return m.context
+        end function
+
+        function isNewInstall() as boolean
+            return m.newInstall
         end function
 
     end class

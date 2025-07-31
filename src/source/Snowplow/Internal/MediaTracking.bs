@@ -292,9 +292,9 @@ namespace Snowplow.Internal
 
             if eventType = MediaTrackingEvent.ERROR
                 payload.Append({
-                    errorCode: info.errorCode,
-                    errorName: info.errorMsg,
-                    errorDescription: info.errorStr
+                    "errorCode": info.errorCode,
+                    "errorName": info.errorMsg,
+                    "errorDescription": info.errorStr
                 })
             else if eventType = MediaTrackingEvent.PERCENT_PROGRESS
                 payload.Append({ "percentProgress": percentProgress })
@@ -308,8 +308,8 @@ namespace Snowplow.Internal
                 })
             else if eventType = MediaTrackingEvent.QUALITY_CHANGE
                 payload.Append({
-                    previousQuality: m.lastQuality.ToStr(),
-                    newQuality: info.streamingSegment.segBitrateBps.ToStr(),
+                    "previousQuality": m.lastQuality.ToStr(),
+                    "newQuality": info.streamingSegment.segBitrateBps.ToStr(),
                     bitrate: info.streamingSegment.segBitrateBps,
                     automatic: true
                 })
@@ -375,7 +375,8 @@ namespace Snowplow.Internal
                 event.addContext(rokuVideoContext)
             end if
 
-            for each e in m.entities
+            for each i in m.entities
+                e = new Snowplow.Internal.EventContext(i)
                 event.addContext(e)
             end for
         end sub

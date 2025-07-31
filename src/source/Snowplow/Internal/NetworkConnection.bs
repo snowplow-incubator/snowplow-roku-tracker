@@ -41,28 +41,28 @@ namespace Snowplow.Internal
             m.log = new log.Logger("Snowplow")
         end sub
 
-        function postRequest(url as string, body as dynamic, retryCount as integer, anonymous = false as boolean) as boolean
-            response = m.request("POST", url, {
+        function postRequest(url as string, body as dynamic, retryCount as integer, anonymous = false as boolean, cookies = {} as dynamic) as dynamic
+            return m.request("POST", url, {
                 json: body,
                 retryCount: retryCount,
-                anonymous: anonymous
+                anonymous: anonymous,
+                cookies: cookies
             })
-            return response.ok
         end function
 
-        function getRequest(url as string, params as dynamic, retryCount as integer, anonymous = false as boolean) as boolean
-            response = m.request("GET", url, {
+        function getRequest(url as string, params as dynamic, retryCount as integer, anonymous = false as boolean, cookies = {} as dynamic) as dynamic
+            return m.request("GET", url, {
                 params: params,
                 retryCount: retryCount,
-                anonymous: anonymous
+                anonymous: anonymous,
+                cookies: cookies
             })
-            return response.ok
         end function
 
         private function request(method, url as string, args as object)
             _params = {}
             _headers = {}
-            ' _cookies = invalid
+            _cookies = []
             _json = invalid
             _timeout = 30000
             _retryCount = 0
@@ -85,6 +85,9 @@ namespace Snowplow.Internal
                 if args.verify <> invalid and (type(args.verify) = "String" or type(args.verify) = "roString")
                     _verify = args.verify
                 end if
+                if args.cookies <> invalid and type(args.cookies) = "roArray"
+                    _cookies = args.cookies
+                end if
                 if args.anonymous
                     requestHeaders.addHeader(Snowplow.Internal.TrackerConstants.SERVER_ANON_HEADER, "*")
                 end if
@@ -104,14 +107,19 @@ namespace Snowplow.Internal
             url = requestQueryString.append(url)
             headers = requestHeaders._headers
 
-            response = m.runRequest(method, url, headers, data, _timeout, _retryCount, _verify)
+            response = m.runRequest(method, url, headers, data, _timeout, _retryCount, _verify, _cookies)
             return response
         end function
 
-        private function runRequest(method, url, headers, data, timeout, retryCount, verify)
+        private function runRequest(method, url, headers, data, timeout, retryCount, verify, cookies)
             urlTransfer = rokurequests_RequestsUrlTransfer(true, true, verify)
             urlTransfer.setUrl(url)
             urlTransfer.SetHeaders(headers)
+            urlTransfer.EnableCookies()
+
+            if cookies.Count() > 0
+                urlTransfer.AddCookies(cookies)
+            end if
 
             cancel_and_return = false
 
@@ -196,6 +204,7 @@ namespace Snowplow.Internal
                 rr.text = responseEvent.GetString()
                 rr.headers = responseEvent.GetResponseHeaders()
                 rr.headersArray = responseEvent.GetResponseHeadersArray()
+                rr.cookies = urlTransfer.GetCookies("", "/")
 
                 rr.GetSourceIdentity = responseEvent.GetSourceIdentity()
                 rr.GetFailureReason = responseEvent.GetFailureReason()

@@ -82,6 +82,11 @@ namespace Snowplow.Internal
         sub trackMediaEvent(data, port)
             media = data.media ?? data.video ?? data.audio
 
+            if media = invalid
+                m.log.error("[tracker] trackMediaEvent requires a media node already initialized for media tracking.")
+                return
+            end if
+
             adContext = invalid
             ad = data.ad
             if ad <> invalid
@@ -118,7 +123,10 @@ namespace Snowplow.Internal
                 end if
 
                 m.trackEvent(event)
+                return
             end for
+
+            m.log.error("[tracker] Media tracking not initialized for the trackMediaEvent node.")
         end sub
 
         sub stopTrackingMedia(data, port)
@@ -164,5 +172,15 @@ namespace Snowplow.Internal
             end for
             return invalid
         end function
+
+        sub trackApplicationInstall()
+            if m.subject.newInstall
+                event = new Snowplow.Internal.SelfDescribing({
+                    schema: "iglu:com.snowplowanalytics.mobile/application_install/jsonschema/1-0-0",
+                    data: {}
+                })
+                m.trackEvent(event)
+            end if
+        end sub
     end class
 end namespace

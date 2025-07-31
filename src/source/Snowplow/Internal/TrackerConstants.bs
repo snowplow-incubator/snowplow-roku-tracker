@@ -10,7 +10,7 @@
 ' See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
 namespace Snowplow.Internal.TrackerConstants
-    const TRACKER_VERSION = "0.3.0"
+    const TRACKER_VERSION = "0.3.1"
 
     const REGISTRY_STATE_NAMESPACE = "_snowplow_state"
     const ANON_UUID = "00000000-0000-0000-0000-000000000000"
