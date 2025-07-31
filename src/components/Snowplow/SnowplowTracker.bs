@@ -97,6 +97,7 @@ sub initializeTracker(data)
         connection = new Snowplow.Internal.NetworkConnection()
         emitter = new Snowplow.Internal.Emitter(configuration, connection)
         m.tracker = new Snowplow.Internal.Tracker(configuration, emitter)
+        if configuration.trackInstall then m.tracker.trackApplicationInstall()
     else
         m.tracker.updateConfiguration(configuration)
     end if

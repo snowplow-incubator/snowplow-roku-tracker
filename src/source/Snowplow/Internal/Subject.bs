@@ -19,16 +19,19 @@ namespace Snowplow.Internal
         deviceInfoContextBuilder as object
         sessionContextBuilder as object
         applicationContextBuilder as object
+        newInstall as boolean
 
         sub new(configuration as object)
             m.configuration = configuration
             m.deviceInfoContextBuilder = new Snowplow.Internal.DeviceInfoContextBuilder()
             m.sessionContextBuilder = new Snowplow.Internal.ClientSessionContextBuilder(configuration)
             m.applicationContextBuilder = new Snowplow.Internal.ApplicationContextBuilder()
+
+            m.newInstall = m.sessionContextBuilder.isNewInstall()
         end sub
 
         sub updateEvent(event as object)
-            if event.domainSessionId = invalid then event.domainSessionId = m.getDomainUserId()
+            if event.domainSessionId = invalid then event.domainSessionId = m.getDomainSessionId()
             if event.domainUserId = invalid then event.domainUserId = m.getDomainUserId()
             if event.networkUserId = invalid then event.networkUserId = m.getNetworkUserId()
             if event.appId = invalid then event.appId = m.getAppId()
