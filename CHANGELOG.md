@@ -1,3 +1,14 @@
+Version 0.3.1 (2025-07-31)
+--------------------------
+
+Let Network User ID be consistent within sessions
+Adds support for the `application_install` event
+Log errors when using `trackMediaEvent` without specifying media
+Fix source of domainSessionId
+Fix properties being lowercased for the quality_change and error media v2 events
+Fix invalid reference to ad_break entity schema
+Fix top-level `snowplow` object not dispatching `trackMediaEvent` calls to tracker instances
+
 Version 0.3.0 (2025-05-30)
 --------------------------
 
