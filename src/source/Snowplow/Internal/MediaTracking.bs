@@ -269,6 +269,11 @@ namespace Snowplow.Internal
         private function getEventsForQualityChange(streamSegmentInfo, info) as dynamic
             if not m.captureEvent(MediaTrackingEvent.QUALITY_CHANGE)
                 return []
+            end if
+
+            contentType = m.getContentType(info)
+            if not (streamSegmentInfo.segTypeStr = "video" or (streamSegmentInfo.segTypeStr = "audio" and contentType = "audio"))
+                return []
             else if m.lastQuality = invalid
                 m.lastQuality = streamSegmentInfo.segBitrateBps
             else if m.lastQuality <> streamSegmentInfo.segBitrateBps
