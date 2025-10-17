@@ -169,8 +169,6 @@ namespace Snowplow.Internal
                 return m.getEventsForStateChange(data, info)
             else if field = "position"
                 return m.getEventsForPositionChange(data, info)
-            else if field = "control"
-                return m.getEventsForControlChange(data, info)
             else if field = "mute"
                 return [m.createEvent(MediaTrackingEvent.VOLUME_CHANGE, info)]
             else if field = "playbackSpeed"
@@ -205,12 +203,6 @@ namespace Snowplow.Internal
             if m.captureEvent(m.translateEvent(state)) then events.push(event)
 
             return events
-        end function
-
-        private function getEventsForControlChange(control, info) as dynamic
-            event = m.createEvent(m.translateEvent(control), info)
-            if not m.captureEvent(control) then return []
-            return [event]
         end function
 
         private function getEventsForTrickPlayModeChange(trickPlayMode, info) as dynamic
@@ -410,7 +402,6 @@ namespace Snowplow.Internal
                 "state",
                 "mute",
                 "playbackSpeed",
-                "control",
                 "trickPlayMode",
                 "streamingSegment",
                 "duration"
