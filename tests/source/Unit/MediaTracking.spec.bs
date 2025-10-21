@@ -129,6 +129,28 @@ namespace tests
             m.assertEqual(0, events.count())
         end sub
 
+        @it("gets metadata for playlist items")
+        sub getsContentMetadataFromPlaylists()
+            mediaTracking = new Snowplow.Internal.MediaTracking({})
+            events = mediaTracking.getEventsForFieldChange("state", "playing", m.playlistInfo(10))
+            m.assertEqual(1, events.count())
+            event = events[0]
+
+            m.assertEqual(3, event.context.count())
+
+            rokuContext = invalid
+            for each context in event.context
+                schema = context.getSchema()
+                if Instr(1, schema, "video") > 0
+                    rokuContext = context
+                end if
+            end for
+
+            m.assertNotInvalid(rokuContext)
+
+            m.assertEqual("Big Buck Bunny", rokuContext.contentTitle)
+        end sub
+
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         ' Helpers
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -154,6 +176,21 @@ namespace tests
                 mute: false,
                 videoFormat: "mp4"
             }
+        end function
+
+        private function playlistInfo(position = 100, state = "playing") as object
+            result = m.videoInfo(position, state)
+
+            result.contentIsPlaylist = true
+            result.contentIndex = 0
+
+            orig = result.content
+            cn = createObject("RoSGNode", "ContentNode")
+            item = cn.createChild("ContentNode")
+            item.append(orig)
+
+            result.content = cn
+            return result
         end function
 
     end class
