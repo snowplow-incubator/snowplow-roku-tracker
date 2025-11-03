@@ -156,6 +156,7 @@ namespace Snowplow.Internal
         end function
 
         sub addContext(event as object, info as object)
+            content = m.getContentData(info)
             mediaPlayerContext = new Snowplow.Internal.MediaPlayerContext()
             mediaPlayerContext.currentTime = info.position
             mediaPlayerContext.duration = info.duration
@@ -164,18 +165,18 @@ namespace Snowplow.Internal
             mediaPlayerContext.muted = info.mute
             mediaPlayerContext.paused = info.state = "paused"
             mediaPlayerContext.percentProgress = m.getPercentProgress(info)
-            if info.content <> invalid then mediaPlayerContext.live = info.content.Live
+            if info.content <> invalid then mediaPlayerContext.live = content.Live
             mediaPlayerContext.playbackRate = info.playbackSpeed ?? 1
             mediaPlayerContext.volume = 100
             event.addContext(mediaPlayerContext)
 
             rokuVideoContext = new Snowplow.Internal.RokuVideoContext()
             rokuVideoContext.videoId = m.id
-            rokuVideoContext.contentId = m.getContentId(info)
-            rokuVideoContext.contentTitle = m.getContentTitle(info)
-            rokuVideoContext.contentUrl = m.getContentUrl(info)
-            rokuVideoContext.contentType = m.getContentType(info)
-            rokuVideoContext.streamFormat = m.getStreamFormat(info)
+            rokuVideoContext.contentId = m.getContentId(content)
+            rokuVideoContext.contentTitle = m.getContentTitle(content)
+            rokuVideoContext.contentUrl = m.getContentUrl(content)
+            rokuVideoContext.contentType = m.getContentType(content)
+            rokuVideoContext.streamFormat = m.getStreamFormat(content)
             rokuVideoContext.streamUrl = m.getStreamUrl(info)
             rokuVideoContext.videoFormat = m.getMediaFormat(info)
             rokuVideoContext.isUnderrun = m.isUnderrun(info)
@@ -199,6 +200,8 @@ namespace Snowplow.Internal
                 "streamInfo",
                 "duration",
                 "content",
+                "contentIndex",
+                "contentIsPlaylist",
                 "position",
                 "timeToStartStreaming",
                 "state",
@@ -254,8 +257,16 @@ namespace Snowplow.Internal
             return Int(percentage).ToStr()
         end function
 
-        private function getContentType(info) as dynamic
-            if info.content <> invalid and info.content.contentType <> invalid and info.content.ContentType > 0
+        private function getContentData(info) as dynamic
+            if info.contentIsPlaylist = true and info.content <> invalid
+                return info.content.getChild(info.contentIndex) ?? info.content
+            else
+                return info.content
+            end if
+        end function
+
+        private function getContentType(content) as dynamic
+            if content <> invalid and content.contentType <> invalid and content.ContentType > 0
                 mappings = {
                     "1": "movie",
                     "2": "series",
@@ -263,43 +274,43 @@ namespace Snowplow.Internal
                     "4": "episode",
                     "5": "audio"
                 }
-                return mappings[info.content.ContentType.ToStr()]
+                return mappings[content.ContentType.ToStr()]
             else
                 return invalid
             end if
         end function
 
-        private function getContentId(info) as dynamic
-            if info.content <> invalid
-                contentId = info.content.id
-                if m.isNonEmptyString(info.content.id)
+        private function getContentId(content) as dynamic
+            if content <> invalid
+                contentId = content.id
+                if m.isNonEmptyString(content.id)
                     return contentId
-                else if m.isNonEmptyString(info.content.video_id)
-                    return info.content.video_id
+                else if m.isNonEmptyString(content.video_id)
+                    return content.video_id
                 end if
             end if
             return invalid
         end function
 
-        private function getContentTitle(info) as dynamic
-            if info.content <> invalid
-                title = info.content.title
+        private function getContentTitle(content) as dynamic
+            if content <> invalid
+                title = content.title
                 if m.isNonEmptyString(title) then return title
             end if
             return invalid
         end function
 
-        private function getContentUrl(info) as dynamic
-            if info.content <> invalid
-                url = info.content.url
+        private function getContentUrl(content) as dynamic
+            if content <> invalid
+                url = content.url
                 if m.isNonEmptyString(url) then return url
             end if
             return invalid
         end function
 
-        private function getStreamFormat(info) as dynamic
-            if info.content <> invalid
-                format = info.content.StreamFormat
+        private function getStreamFormat(content) as dynamic
+            if content <> invalid
+                format = content.StreamFormat
                 if m.isNonEmptyString(format) and format <> "(null)" then return format
             end if
             return invalid
