@@ -1,3 +1,9 @@
+Version 0.3.2 (2025-11-03)
+--------------------------
+Support extracting content information from playlist items
+Fix double firing events when custom UI manually changes state
+Only calculate bitrate drops against same-media stream chunks
+
 Version 0.3.1 (2025-07-31)
 --------------------------
 
