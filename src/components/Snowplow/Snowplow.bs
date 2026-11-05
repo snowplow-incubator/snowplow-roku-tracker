@@ -38,8 +38,12 @@ end sub
 sub initializeTracker()
     data = m.top.init
     trackerNamespace = getNamespaceFromData(data)
-    createTracker(trackerNamespace, data)
-    m.trackerNamespaces.push(trackerNamespace)
+    if hasTrackerNamespace(trackerNamespace)
+        m.top[trackerNamespace].init = data
+    else
+        createTracker(trackerNamespace, data)
+        m.trackerNamespaces.push(trackerNamespace)
+    end if
 end sub
 
 ' Tracks a screen view event using all initialized trackers
@@ -113,4 +117,11 @@ end sub
 
 function getNamespaceFromData(data) as string
     return data.namespace ?? Snowplow.Internal.TrackerConstants.DEFAULT_NAMESPACE
+end function
+
+function hasTrackerNamespace(trackerNamespace as string) as boolean
+    for each ns in m.trackerNamespaces
+        if ns = trackerNamespace then return true
+    end for
+    return false
 end function
