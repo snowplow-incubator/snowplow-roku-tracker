@@ -19,6 +19,7 @@ sub init()
     m.port = createObject("roMessagePort")
 
     m.top.ObserveField("init", "initializeTracker")
+    m.top.ObserveField("setUserId", "setUserId")
     m.top.ObserveField("screenView", "trackScreenView")
     m.top.ObserveField("selfDescribing", "trackSelfDescribing")
     m.top.ObserveField("structured", "trackStructured")
@@ -44,6 +45,16 @@ sub initializeTracker()
         createTracker(trackerNamespace, data)
         m.trackerNamespaces.push(trackerNamespace)
     end if
+end sub
+
+' Updates the business user ID of all initialized trackers at runtime
+' @param {string} userId New user ID, or an empty string to clear it
+sub setUserId()
+    userId = m.top.setUserId
+    if m.trackerNamespaces.count() = 0 then m.log.error("No tracker initialized")
+    for each trackerNamespace in m.trackerNamespaces
+        m.top[trackerNamespace].setUserId = userId
+    end for
 end sub
 
 ' Tracks a screen view event using all initialized trackers

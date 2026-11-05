@@ -284,6 +284,57 @@ namespace tests
             return context.count() = 1 and context[0].data.osVersion <> invalid and context[0].data.RIDA <> invalid
         end function
 
+        @it("changes the uid of events tracked after setUserId")
+        sub setUserIdChangesUidOnSubsequentEvents()
+            m.global.snowplow.init = {
+                network: m.networkConfig,
+                subject: { userId: "user1" }
+            }
+            m.global.snowplow.structured = {
+                se_ca: "category",
+                se_ac: "action"
+            }
+
+            m.global.snowplow.setUserId = "user2"
+            m.global.snowplow.structured = {
+                se_ca: "category",
+                se_ac: "action"
+            }
+
+            m.assertMicroCounts(function(counts)
+                return counts.good = 2 and counts.bad = 0
+            end function)
+
+            m.assertMicroGoodEvents(function(good)
+                uids = { user1: 0, user2: 0 }
+                for each event in good
+                    uids[event.event.user_id] += 1
+                end for
+                return uids.user1 = 1 and uids.user2 = 1
+            end function)
+        end sub
+
+        @it("omits the uid of events tracked after setUserId is cleared")
+        sub setUserIdClearedOmitsUid()
+            m.global.snowplow.init = {
+                network: m.networkConfig,
+                subject: { userId: "user1" }
+            }
+            m.global.snowplow.setUserId = ""
+            m.global.snowplow.structured = {
+                se_ca: "category",
+                se_ac: "action"
+            }
+
+            m.assertMicroCounts(function(counts)
+                return counts.good = 1 and counts.bad = 0
+            end function)
+
+            m.assertMicroGoodEvents(function(good)
+                return good[0].event.user_id = invalid
+            end function)
+        end sub
+
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         ' private helpers
         '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

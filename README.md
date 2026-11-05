@@ -77,6 +77,20 @@ You may initialize multiple trackers with different namespaces.
 Setting the `init` property with the same tracker namespace updates the configuration of the tracker.
 When no namespace is given, a namespace with the name "default" is used (both in configuration and when tracking events).
 
+The business user ID (`subject.userId` above) can be changed at runtime, e.g. after a login or logout,
+without re-initializing the tracker, by setting the `setUserId` property:
+
+```brs
+' Updates the business user ID of all initialized trackers
+m.global.snowplow.setUserId = "user-1234"
+
+' Clears the business user ID, e.g. on logout
+m.global.snowplow.setUserId = ""
+```
+
+`setUserId` applies to trackers that are already initialized, so set it after `init`.
+Re-initializing a tracker replaces its configuration, including the user ID.
+
 To track events, simply assign their properties as associative arrays to fields corresponding to event types.
 Events will be sent to all initialized trackers (with any namespace) when setting the event types on the Snowplow instance.
 To send events to a specific tracker, call its namespace as follows: `m.global.snowplow.trackerNamespace.structured = {...}`.

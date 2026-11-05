@@ -38,6 +38,8 @@ m.global.snowplow.structured = {
     <interface>
         <!-- initializes a new tracker -->
         <field id="init" type="assocarray" />
+        <!-- updates the business user ID of all initialized trackers at runtime -->
+        <field id="setUserId" type="string" alwaysNotify="true" />
         <!-- tracks a screen view event using all initialized trackers -->
         <field id="screenView" type="assocarray" />
         <!-- tracks a self-describing event using all initialized trackers -->
