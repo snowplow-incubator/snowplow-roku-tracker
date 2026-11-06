@@ -17,6 +17,8 @@ See the Apache License Version 2.0 for the specific language governing permissio
     <interface>
         <!-- initializes the tracker -->
         <field id="init" type="assocarray" />
+        <!-- updates the business user ID at runtime -->
+        <field id="setUserId" type="string" alwaysNotify="true" />
         <!-- tracks a screen view event -->
         <field id="screenView" type="assocarray" />
         <!-- tracks a self-describing event -->

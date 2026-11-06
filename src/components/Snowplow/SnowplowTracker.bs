@@ -27,6 +27,7 @@ sub init()
     m.port = createObject("roMessagePort")
 
     m.top.ObserveField("init", m.port)
+    m.top.ObserveField("setUserId", m.port)
     m.top.ObserveField("screenView", m.port)
     m.top.ObserveField("selfDescribing", m.port)
     m.top.ObserveField("structured", m.port)
@@ -58,6 +59,8 @@ sub runLoop()
 
                 if field = "init"
                     initializeTracker(data)
+                else if field = "setUserId"
+                    setUserId(data)
                 else if field = "screenView"
                     trackScreenView(data)
                 else if field = "selfDescribing"
@@ -100,6 +103,16 @@ sub initializeTracker(data)
         if configuration.trackInstall then m.tracker.trackApplicationInstall()
     else
         m.tracker.updateConfiguration(configuration)
+    end if
+end sub
+
+' Updates the business user ID at runtime
+' @param {string} userId New user ID, or an empty string to clear it
+sub setUserId(userId)
+    if m.tracker <> invalid
+        m.tracker.setUserId(userId)
+    else
+        m.log.error("Tracker not initialized")
     end if
 end sub
 

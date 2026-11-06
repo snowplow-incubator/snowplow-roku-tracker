@@ -53,6 +53,71 @@ namespace tests
             m.assertEqual("c2", tracker.subject.configuration.collector)
         end sub
 
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        @describe("setUserId")
+        '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        @it("updates configuration.userId without touching other subject fields")
+        sub setUserIdUpdatesConfigurationUserId()
+            connection = new MockNetworkConnection()
+            configuration = new Snowplow.Internal.Configuration({
+                network: { collector: "c" },
+                subject: { userId: "user1", domainUserId: "domain1", networkUserId: "network1" }
+            })
+            emitter = new Snowplow.Internal.Emitter(configuration, connection)
+            tracker = new Snowplow.Internal.Tracker(configuration, emitter)
+
+            tracker.setUserId("user2")
+
+            m.assertEqual("user2", tracker.configuration.userId)
+            m.assertEqual("domain1", tracker.configuration.domainUserId)
+            m.assertEqual("network1", tracker.configuration.networkUserId)
+
+            event = new Snowplow.Internal.Structured({ se_ca: "category", se_ac: "action" })
+            tracker.trackEvent(event)
+
+            request = connection.requests[0]
+            m.assertEqual("user2", request.body.data[0].uid)
+        end sub
+
+        @it("omits uid from the next payload when set to invalid")
+        sub setUserIdInvalidOmitsUid()
+            connection = new MockNetworkConnection()
+            configuration = new Snowplow.Internal.Configuration({
+                network: { collector: "c" },
+                subject: { userId: "user1" }
+            })
+            emitter = new Snowplow.Internal.Emitter(configuration, connection)
+            tracker = new Snowplow.Internal.Tracker(configuration, emitter)
+
+            tracker.setUserId(invalid)
+
+            event = new Snowplow.Internal.Structured({ se_ca: "category", se_ac: "action" })
+            tracker.trackEvent(event)
+
+            request = connection.requests[0]
+            m.assertFalse(request.body.data[0].DoesExist("uid"))
+        end sub
+
+        @it("omits uid from the next payload when set to an empty string")
+        sub setUserIdEmptyStringOmitsUid()
+            connection = new MockNetworkConnection()
+            configuration = new Snowplow.Internal.Configuration({
+                network: { collector: "c" },
+                subject: { userId: "user1" }
+            })
+            emitter = new Snowplow.Internal.Emitter(configuration, connection)
+            tracker = new Snowplow.Internal.Tracker(configuration, emitter)
+
+            tracker.setUserId("")
+
+            event = new Snowplow.Internal.Structured({ se_ca: "category", se_ac: "action" })
+            tracker.trackEvent(event)
+
+            request = connection.requests[0]
+            m.assertFalse(request.body.data[0].DoesExist("uid"))
+        end sub
+
     end class
 
 end namespace
