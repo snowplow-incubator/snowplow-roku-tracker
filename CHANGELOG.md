@@ -1,3 +1,8 @@
+Version 0.4.0 (2026-11-06)
+--------------------------
+Add setUserId to update the user ID at runtime (#29)
+Fix duplicate trackers when re-initializing a namespace (#29)
+
 Version 0.3.2 (2025-11-03)
 --------------------------
 Support extracting content information from playlist items
