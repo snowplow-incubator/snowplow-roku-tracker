@@ -241,6 +241,23 @@ The following steps assume that you have enabled developer mode on your Roku dev
 Alternatively, you may run the tests from Visual Studio Code as the debug configuration is already prepared.
 Install the BrightScript extension to Visual Studio Code and choose "Run tests" in the debug options.
 
+### Running tests without a Roku device
+
+The tests can also run in the [brs-engine](https://github.com/lvcabral/brs-engine) simulator.
+It is not a full replacement for a device, but it runs the integration tests end-to-end against Snowplow Micro.
+
+1. Start Snowplow Micro locally, e.g. `docker run -p 9090:9090 snowplow/snowplow-micro:latest`
+2. Set `snowplow_collector=http://localhost:9090` in `tests/manifest`
+3. Build the tests and run the package (named after the repository folder) in the simulator:
+
+    ```bash
+    npm run build-tests
+    npx --yes -p brs-node@2.6.2 brs-cli out/snowplow-roku-tracker.zip
+    ```
+
+Some unit tests in `MediaTracking.spec.bs` and `VideoTracking.spec.bs` don't pass in the simulator yet, and a crash there ends the run.
+To run a single suite, add `@only` above its `@suite` annotation.
+
 ## Copyright and License
 
 The Snowplow Roku Tracker is copyright 2021 Snowplow Analytics Ltd.
