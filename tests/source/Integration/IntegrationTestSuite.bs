@@ -39,7 +39,9 @@ namespace tests
 
         private sub assertMicroResponse(api, validation)
             for i = 1 to 5
-                sleep(500)
+                ' wait() instead of sleep() so that pending SceneGraph observer callbacks
+                ' can run while polling (required by the brs-engine simulator)
+                wait(500, CreateObject("roMessagePort"))
                 res = rokurequests_Requests().get(api, {"useCache": false})
                 success = validation(res.json)
                 if success then return

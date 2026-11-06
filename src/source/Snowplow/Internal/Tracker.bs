@@ -58,6 +58,16 @@ namespace Snowplow.Internal
             m.emitter.configuration = configuration
         end sub
 
+        ' Updates the business user ID (payload `uid`) without affecting domainUserId,
+        ' networkUserId or the client_session entity's userId, and without resetting the session.
+        ' An empty string clears it (the SceneGraph field is typed string, so it can't carry invalid).
+        sub setUserId(userId)
+            if userId <> invalid
+                if userId = "" then userId = invalid
+            end if
+            m.configuration.userId = userId
+        end sub
+
         sub trackMedia(data, port)
             media = data.media ?? data.video ?? data.audio
             version = data.version ?? 1
