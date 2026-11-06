@@ -220,6 +220,10 @@ namespace tests
                 se_la: "label"
             }
 
+            m.assertMicroCounts(function(counts)
+                return counts.good = 1 and counts.bad = 0
+            end function)
+
             m.assertMicroGoodEvents(m.containsDeviceInfoContext)
         end sub
 
